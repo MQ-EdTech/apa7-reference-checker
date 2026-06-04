@@ -1,0 +1,40 @@
+# Secrets and env
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Node / frontend
+node_modules/
+.next/
+.svelte-kit/
+dist/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# User documents (never commit real student work)
+*.docx
+*.pdf
+!tests/fixtures/**/*.docx
+!tests/fixtures/**/*.pdf
+
+# Local data
+/data/
+*.sqlite
+*.sqlite3
