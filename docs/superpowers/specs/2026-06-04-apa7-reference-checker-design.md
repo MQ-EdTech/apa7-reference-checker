@@ -235,7 +235,7 @@ LMS POSTs an LTI launch JWT → API verifies via cached JWKS → creates a short
 `apa7-check essay.docx` reads the file locally, calls the library directly. No API, worker, DB, or Redis involved.
 
 ### 6.4 REST API variant
-Same as web upload but with API-key auth. Caller manages polling. Returns the report payload + a presigned-style download URL for the annotated DOCX.
+Same as web upload but with API-key auth. Caller manages polling. Returns the report payload and a stable authenticated download URL for the annotated DOCX (the standard `GET /v1/jobs/{id}/annotated.docx` endpoint, which requires the same API key that created the job).
 
 ---
 
@@ -407,7 +407,7 @@ The annotated DOCX download page warns: *"Once you download this file, it's on y
 
 - **Configuration** — 12-factor: all config via env vars. `.env.example` checked into repo with documented defaults. Secrets (LTI private key, optional Sentry DSN later) loaded from env at startup.
 
-- **Health checks** — `GET /healthz` (liveness) and `GET /readyz` (DB + Redis connectivity) on the API; arq's built-in worker health endpoint exposed.
+- **Health checks** — `GET /healthz` (liveness) and `GET /readyz` (DB + Redis connectivity) on the API. Worker health is exposed via arq's standard Redis health key (`arq:health-check`), which a sidecar healthcheck script in the worker container reads and exits non-zero on staleness (≥ 30s) — wired into docker-compose's `healthcheck:` block.
 
 ---
 
@@ -435,6 +435,8 @@ Explicitly flagged as v2+ or never:
 | 3 | Frontend framework? | Before frontend implementation begins |
 | 4 | What does the LTI tool consumer-key registration UX look like for deployers? | LTI implementation phase |
 | 5 | Should the CLI support batch mode (a directory of essays)? | After v1 ships, based on marker feedback |
+| 6 | What does the LTI AGS grade-passback score represent? (Completion only? Percentage of references without errors? Pass/fail at a threshold?) Markers may want a draft-quality signal in the gradebook; students may not want any score recorded. Likely per-deployment config. | LTI implementation phase |
+| 7 | Implementation phasing — engine + CLI first, then API + worker, then LTI, then frontend? The writing-plans skill will likely structure the plan in phases regardless; flag here so phasing is a conscious decision rather than a default. | Writing-plans phase |
 
 ---
 
