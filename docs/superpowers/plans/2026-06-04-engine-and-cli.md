@@ -5864,5 +5864,3 @@ uv run ruff check . && uv run ruff format --check .
 ```
 
 This completes plan #1. The next plan (#2 — API + Worker + Docker) wraps this engine in a FastAPI service and arq worker with `docker-compose`.
-
-
