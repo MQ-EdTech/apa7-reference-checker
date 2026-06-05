@@ -177,3 +177,49 @@ def annotate_docx_from_source(
             )
         )
     return inject_comment_xml(source_bytes, specs)
+
+
+def annotate_docx_from_text(*, text: str, report: Report) -> bytes:
+    """Generate a fresh DOCX from `text` (one paragraph per line) and annotate
+    it with comments from `report`."""
+    from docx import Document  # local import to avoid issues if python-docx absent
+
+    doc = Document()
+    para_starts: list[int] = []
+    cursor = 0
+    for line in text.split("\n"):
+        para_starts.append(cursor)
+        doc.add_paragraph(line)
+        cursor += len(line) + 1  # +1 for the newline we split on
+    buf = io.BytesIO()
+    doc.save(buf)
+    source_bytes = buf.getvalue()
+
+    iso_now = datetime.now(tz=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    specs: list[CommentSpec] = []
+    for i, iss in enumerate(report.issues):
+        # Find which paragraph index contains the issue start.
+        para_idx = 0
+        for idx, start in enumerate(para_starts):
+            if start <= iss.position.start:
+                para_idx = idx
+            else:
+                break
+        anchor_text = text[iss.position.start : iss.position.end].strip("\n")
+        if not anchor_text:
+            continue
+        body = iss.message
+        if iss.suggestion:
+            body = f"{body}\nSuggestion: {iss.suggestion}"
+        specs.append(
+            CommentSpec(
+                id=str(i),
+                author="apa7-validator",
+                initials="APA7",
+                date=iso_now,
+                text=body,
+                anchor_paragraph_idx=para_idx,
+                anchor_text=anchor_text,
+            )
+        )
+    return inject_comment_xml(source_bytes, specs)
