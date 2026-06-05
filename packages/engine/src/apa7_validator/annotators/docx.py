@@ -3,9 +3,13 @@ from __future__ import annotations
 import io
 import re
 import zipfile
+from datetime import UTC, datetime
 from typing import TypedDict
 
 from lxml import etree
+
+from ..extractors.base import PositionMap
+from ..models import Report
 
 W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 NS_MAP = {"w": W_NS}
@@ -133,3 +137,43 @@ def inject_comment_xml(source_bytes: bytes, comments: list[CommentSpec]) -> byte
             if not wrote_comments:
                 zout.writestr("word/comments.xml", comments_xml)
     return out_buf.getvalue()
+
+
+def annotate_docx_from_source(
+    *,
+    source_bytes: bytes,
+    report: Report,
+    extracted_text: str,
+    position_map: PositionMap,
+) -> bytes:
+    """Annotate a DOCX with one Word comment per issue.
+
+    Uses the DOCX extractor's position_map (`docx_run` kind) to find the
+    paragraph index for each issue. Within the paragraph, the anchor text is
+    the literal slice of `extracted_text[issue.position.start:issue.position.end]`.
+    """
+    iso_now = datetime.now(tz=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    specs: list[CommentSpec] = []
+    for i, iss in enumerate(report.issues):
+        kind, ref = position_map.to_source(iss.position.start)
+        if kind != "docx_run":
+            continue
+        para_idx = ref[0]
+        anchor_text = extracted_text[iss.position.start : iss.position.end]
+        if not anchor_text.strip():
+            continue
+        body = iss.message
+        if iss.suggestion:
+            body = f"{body}\nSuggestion: {iss.suggestion}"
+        specs.append(
+            CommentSpec(
+                id=str(i),
+                author="apa7-validator",
+                initials="APA7",
+                date=iso_now,
+                text=body,
+                anchor_paragraph_idx=para_idx,
+                anchor_text=anchor_text,
+            )
+        )
+    return inject_comment_xml(source_bytes, specs)
