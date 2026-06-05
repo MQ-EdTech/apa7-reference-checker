@@ -6,10 +6,11 @@ description = "APA 7 reference and citation validator (workspace root)"
 requires-python = ">=3.12"
 
 [tool.uv.workspace]
-members = ["packages/engine"]
+members = ["packages/engine", "packages/cli"]
 
 [tool.uv.sources]
 apa7-validator = { workspace = true }
+apa7-check = { workspace = true }
 
 [tool.ruff]
 line-length = 100
