@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from typing import Literal
 
 
 class ReferenceType(Enum):
@@ -73,7 +74,7 @@ class Issue:
     message: str
     position: Position
     suggestion: str | None = None
-    target_kind: str = "reference"  # "reference" | "citation" | "global"
+    target_kind: Literal["reference", "citation", "global"] = "reference"
 
 
 @dataclass(frozen=True, slots=True)

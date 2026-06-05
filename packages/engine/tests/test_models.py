@@ -35,6 +35,7 @@ def test_citation_with_page_number():
     )
     assert cit.page == "5"
     assert cit.narrative is False
+    assert cit.secondary_source_author is None
 
 
 def test_issue_carries_severity_and_span():
@@ -46,6 +47,7 @@ def test_issue_carries_severity_and_span():
         suggestion="Verify the DOI prefix and suffix",
     )
     assert iss.severity is Severity.ERROR
+    assert iss.target_kind == "reference"
 
 
 def test_report_aggregates_issues():
