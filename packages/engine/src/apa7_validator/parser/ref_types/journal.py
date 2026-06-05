@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from apa7_validator.models import Author, Position, Reference, ReferenceType
+from ...models import Author, Position, Reference, ReferenceType
 
 # Journal article shape (loose):
 #   <authors> (<year>). <title>. <Journal>, <volume>(<issue>), <pages>. [doi/url]

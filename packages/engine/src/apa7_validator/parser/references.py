@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import re
 
-from apa7_validator.models import Author, Position, Reference, ReferenceType
-
+from ..models import Author, Position, Reference, ReferenceType
 from .ref_types import try_parse_journal
 
 
