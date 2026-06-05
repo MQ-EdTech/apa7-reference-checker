@@ -1,0 +1,77 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.unpaywall.org
+      User-Agent:
+      - python-httpx/0.28.1
+    method: GET
+    uri: https://api.unpaywall.org/v2/10.7717/peerj.4375
+  response:
+    body:
+      string: !!binary |
+        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
+    headers:
+      Access-Control-Allow-Headers:
+      - origin, content-type, accept, x-requested-with
+      Access-Control-Allow-Methods:
+      - POST, GET, OPTIONS, PUT, DELETE, PATCH
+      Access-Control-Allow-Origin:
+      - '*'
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '1523'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 05 Jun 2026 13:42:51 GMT
+      Nel:
+      - '{"report_to":"heroku-nel","response_headers":["Via"],"max_age":3600,"success_fraction":0.01,"failure_fraction":0.1}'
+      Report-To:
+      - '{"group":"heroku-nel","endpoints":[{"url":"https://nel.heroku.com/reports?s=brt38aus3gwsfGxuiMzus5UuO1Vh9%2B433Awleut%2BHcU%3D\u0026sid=c46efe9b-d3d2-4a0c-8c76-bfafa16c5add\u0026ts=1780666971"}],"max_age":3600}'
+      Reporting-Endpoints:
+      - heroku-nel="https://nel.heroku.com/reports?s=brt38aus3gwsfGxuiMzus5UuO1Vh9%2B433Awleut%2BHcU%3D&sid=c46efe9b-d3d2-4a0c-8c76-bfafa16c5add&ts=1780666971"
+      Server:
+      - Heroku
+      Vary:
+      - Accept-Encoding
+      Via:
+      - 1.1 heroku-router
+    status:
+      code: 200
+      message: OK
+version: 1
