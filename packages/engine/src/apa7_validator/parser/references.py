@@ -31,10 +31,14 @@ def parse_references(section: str, body_offset: int) -> list[Reference]:
     normalised = re.sub(r"\n(?=[A-Z][a-zA-Z'\-]+(,| [A-Z]\.))", "\n\n", section)
     raw_entries = [chunk.strip() for chunk in re.split(r"\n\s*\n", normalised) if chunk.strip()]
     refs: list[Reference] = []
-    cursor = body_offset
+    search_from = 0  # track where the next find should start
     for entry in raw_entries:
         # Find absolute position within original text.
-        start = section.find(entry) + body_offset if section.find(entry) >= 0 else cursor
+        local = section.find(entry, search_from)
+        if local < 0:
+            # Fallback — shouldn't normally happen
+            local = search_from
+        start = local + body_offset
         parsed = _try_parse_any(entry, start)
         if parsed is None:
             parsed = Reference(
@@ -46,7 +50,7 @@ def parse_references(section: str, body_offset: int) -> list[Reference]:
                 position=Position(start=start, end=start + len(entry)),
             )
         refs.append(parsed)
-        cursor = start + len(entry)
+        search_from = local + len(entry)
     return refs
 
 

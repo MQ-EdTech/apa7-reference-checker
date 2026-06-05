@@ -21,3 +21,13 @@ def test_unparseable_entry_returned_with_unknown_type():
     refs = parse_references(section, body_offset=0)
     assert len(refs) == 1
     assert refs[0].ref_type is ReferenceType.UNKNOWN
+
+
+def test_duplicate_entries_get_distinct_positions():
+    entry = "Smith, J. (2020). A paper. Journal of Things, 5(2), 100-120."
+    section = entry + "\n\n" + entry
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 2
+    # Positions must be distinct — second entry starts after first ends.
+    assert refs[0].position.start < refs[1].position.start
+    assert refs[1].position.start >= refs[0].position.end
