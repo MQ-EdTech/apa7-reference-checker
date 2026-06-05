@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 from typing import Literal
 
+from .annotators.docx import annotate_docx_from_source, annotate_docx_from_text
 from .clients.base import Clients
 from .extractors import DocxExtractor, PdfExtractor, TextExtractor
 from .extractors.base import ExtractionResult
@@ -93,4 +94,25 @@ def validate(
 
 
 def annotate_docx(source: bytes | None, report: Report) -> bytes:
-    raise NotImplementedError("Wired in Task 38")
+    if source is None:
+        # Reconstruct flat text from the report's references and citations.
+        # For text-only inputs we don't have the original; the SPA is expected
+        # to call annotate_docx_from_text with the raw text directly when it has it.
+        # Here we use the raw form available on Reference.raw / Citation.raw.
+        parts: list[str] = []
+        for c in report.citations:
+            parts.append(c.raw)
+        if report.references:
+            parts.append("\n\nReferences\n")
+            for r in report.references:
+                parts.append(r.raw)
+        text = "\n".join(parts) or " "
+        return annotate_docx_from_text(text=text, report=report)
+    # Re-extract to get position_map.
+    extracted = DocxExtractor().extract(source)
+    return annotate_docx_from_source(
+        source_bytes=source,
+        report=report,
+        extracted_text=extracted.text,
+        position_map=extracted.position_map,
+    )
