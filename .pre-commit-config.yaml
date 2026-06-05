@@ -20,8 +20,9 @@ repos:
     hooks:
       - id: forbid-mq-internal-strings
         name: forbid MQ-internal strings (mq.edu.au, OneID, student IDs)
-        # Scans packages/ and apps/ only; docs/superpowers/ contains planning docs that
-        # quote the hook pattern itself and would cause false positives.
-        entry: bash -c 'if grep -rEn "mq\.edu\.au|OneID|s[0-9]{8}" --include="*.py" --include="*.md" --include="*.yaml" --include="*.yml" --include="*.toml" packages/ apps/ 2>/dev/null; then echo "Forbidden MQ-internal string detected"; exit 1; fi'
+        # Scans packages/ apps/ docs/ for MQ-internal markers. Excludes
+        # docs/superpowers/, which holds internal spec/plan notes that legitimately
+        # quote the hook's example patterns.
+        entry: bash -c 'if grep -rEn "mq\.edu\.au|OneID|s[0-9]{8}" --include="*.py" --include="*.md" --include="*.yaml" --include="*.yml" --include="*.toml" --exclude-dir=superpowers packages/ apps/ docs/ 2>/dev/null; then echo "Forbidden MQ-internal string detected"; exit 1; fi'
         language: system
         pass_filenames: false
