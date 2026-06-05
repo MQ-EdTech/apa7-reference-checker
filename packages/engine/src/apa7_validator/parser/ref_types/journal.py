@@ -31,7 +31,7 @@ _RE = re.compile(
 )
 
 
-def _parse_authors(raw: str) -> list[Author]:
+def parse_authors(raw: str) -> list[Author]:
     # APA author lists: "Smith, J., Jones, A., & Lee, B."
     # Split on ", &" or ", " — group "Last, F. M." pairs.
     parts = [p.strip().rstrip(",") for p in re.split(r",\s*&\s*|,\s+", raw) if p.strip()]
@@ -54,7 +54,7 @@ def try_parse_journal(raw: str, position_start: int) -> Reference | None:
     return Reference(
         raw=raw,
         ref_type=ReferenceType.JOURNAL_ARTICLE,
-        authors=_parse_authors(m.group("authors")),
+        authors=parse_authors(m.group("authors")),
         year=m.group("year"),
         title=m.group("title").strip(),
         container=m.group("container").strip(),
