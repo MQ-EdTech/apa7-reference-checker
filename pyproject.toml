@@ -29,5 +29,6 @@ include = ["packages/engine/src", "packages/cli/src"]
 
 [dependency-groups]
 dev = [
+    "lxml-stubs>=0.5.1",
     "pre-commit>=4.6.0",
 ]
