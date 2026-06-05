@@ -6,16 +6,48 @@ The actual implementations are wired in Task 37 (validate) and Task 38
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+import asyncio
+from typing import Literal
 
-from .models import Report
+from .clients.base import Clients
+from .extractors import DocxExtractor, PdfExtractor, TextExtractor
+from .extractors.base import ExtractionResult
+from .models import Issue, Report
+from .parser import parse_citations, parse_references, split_body_and_references
+from .reporter import assemble
+from .validators import IssueBuilder
+from .validators.cross_matching import check_cross_matching
+from .validators.existence import check_existence
+from .validators.formatting.ai_source import check_ai_source
+from .validators.formatting.book import check_book
+from .validators.formatting.book_chapter import check_book_chapter
+from .validators.formatting.cross_cutting import (
+    check_alphabetical_order,
+    check_doi_format,
+    check_title_sentence_case,
+    check_year_format,
+)
+from .validators.formatting.journal import check_journal
+from .validators.formatting.report import check_report
+from .validators.formatting.website import check_website
 
-if TYPE_CHECKING:
-    # Clients is defined in Task 25.  Until that module exists, alias to Any so
-    # pyright sees a concrete type rather than Unknown.
-    Clients = Any
+__all__ = ["Format", "IssueBuilder", "annotate_docx", "validate"]
 
 Format = Literal["text", "docx", "pdf"]
+
+
+def _extract(source: bytes | str, format: Format) -> ExtractionResult:
+    if format == "text":
+        return TextExtractor().extract(source)
+    if format == "docx":
+        if isinstance(source, str):
+            raise TypeError("DOCX validation requires bytes, got str")
+        return DocxExtractor().extract(source)
+    if format == "pdf":
+        if isinstance(source, str):
+            raise TypeError("PDF validation requires bytes, got str")
+        return PdfExtractor().extract(source)
+    raise ValueError(f"unknown format: {format!r}")
 
 
 def validate(
@@ -24,24 +56,41 @@ def validate(
     *,
     clients: Clients | None = None,
 ) -> Report:
-    """Validate an essay's APA 7 references and citations.
+    if clients is None:
+        clients = Clients.dry_run()
+    extracted = _extract(source, format)
+    body, refs_section, found = split_body_and_references(extracted.text)
+    references = parse_references(refs_section, body_offset=len(body))
+    citations = parse_citations(body)
 
-    `source` is bytes for DOCX/PDF, str for text. `clients` is an optional
-    bundle of lookup clients (CrossRef, Unpaywall, OpenLibrary, URL liveness).
-    Pass `None` to use clients in dry-run mode (no network).
-    """
-    raise NotImplementedError("Wired in Task 37")
+    formatting_issues: list[Issue] = []
+    formatting_issues += check_alphabetical_order(references)
+    for ref in references:
+        formatting_issues += check_doi_format(ref)
+        formatting_issues += check_year_format(ref)
+        formatting_issues += check_title_sentence_case(ref)
+        formatting_issues += check_journal(ref)
+        formatting_issues += check_book(ref)
+        formatting_issues += check_book_chapter(ref)
+        formatting_issues += check_website(ref)
+        formatting_issues += check_report(ref)
+        formatting_issues += check_ai_source(ref)
+
+    cross_issues = check_cross_matching(citations, references)
+    existence_issues, degraded = asyncio.run(check_existence(references, clients))
+
+    warnings = [] if found else ["no_reference_list_found"]
+
+    return assemble(
+        references=references,
+        citations=citations,
+        formatting_issues=formatting_issues,
+        cross_matching_issues=cross_issues,
+        existence_issues=existence_issues,
+        warnings=warnings,
+        degraded_checks=degraded,
+    )
 
 
-def annotate_docx(
-    source: bytes | None,
-    report: Report,
-) -> bytes:
-    """Produce an annotated `.docx` from a `Report`.
-
-    If `source` is the original DOCX bytes, comments are injected into a copy
-    of that document preserving its formatting. If `source` is None (the input
-    was text or PDF), a fresh DOCX is generated from the extracted text and
-    comments injected into that.
-    """
+def annotate_docx(source: bytes | None, report: Report) -> bytes:
     raise NotImplementedError("Wired in Task 38")
