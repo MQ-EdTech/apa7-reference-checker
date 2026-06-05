@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json as _json
+from dataclasses import asdict
+
 from apa7_validator.models import Report, Severity
 
 _ICON = {Severity.ERROR: "[ERROR]", Severity.WARNING: "[WARN] ", Severity.INFO: "[INFO] "}
@@ -23,3 +26,17 @@ def render_human(report: Report) -> str:
     else:
         lines.append("No issues found.")
     return "\n".join(lines) + "\n"
+
+
+def render_json(report: Report) -> str:
+    payload = {
+        "references": [asdict(r) for r in report.references],
+        "citations": [asdict(c) for c in report.citations],
+        "issues": [{**asdict(i), "severity": i.severity.value} for i in report.issues],
+        "warnings": report.warnings,
+        "degraded_checks": report.degraded_checks,
+    }
+    # `ref_type` is an Enum; convert.
+    for r in payload["references"]:
+        r["ref_type"] = r["ref_type"].name if hasattr(r["ref_type"], "name") else str(r["ref_type"])
+    return _json.dumps(payload, indent=2) + "\n"
