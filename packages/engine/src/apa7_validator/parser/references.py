@@ -18,12 +18,18 @@ def parse_references(section: str, body_offset: int) -> list[Reference]:
 
     Entries are separated by blank lines OR by a newline followed by a line
     that starts with a capital letter (heuristic: each new APA reference
-    begins with an author surname). For now, blank-line splitting is enough.
+    begins with an author surname, e.g. "Smith, J." or "Jones, A., & Lee").
+    This handles both double-newline (text/PDF) and single-newline (DOCX)
+    paragraph separators.
     """
     if not section.strip():
         return []
 
-    raw_entries = [chunk.strip() for chunk in re.split(r"\n\s*\n", section) if chunk.strip()]
+    # First normalise: replace a newline that is immediately followed by an
+    # uppercase letter + comma/period/space (APA author pattern) with a double
+    # newline so the existing blank-line splitter can do the rest.
+    normalised = re.sub(r"\n(?=[A-Z][a-zA-Z'\-]+(,| [A-Z]\.))", "\n\n", section)
+    raw_entries = [chunk.strip() for chunk in re.split(r"\n\s*\n", normalised) if chunk.strip()]
     refs: list[Reference] = []
     cursor = body_offset
     for entry in raw_entries:
