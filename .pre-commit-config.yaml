@@ -1,0 +1,27 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.7
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-merge-conflict
+
+  - repo: local
+    hooks:
+      - id: forbid-mq-internal-strings
+        name: forbid MQ-internal strings (mq.edu.au, OneID, student IDs)
+        # Scans packages/ and apps/ only; docs/superpowers/ contains planning docs that
+        # quote the hook pattern itself and would cause false positives.
+        entry: bash -c 'if grep -rEn "mq\.edu\.au|OneID|s[0-9]{8}" --include="*.py" --include="*.md" --include="*.yaml" --include="*.yml" --include="*.toml" packages/ apps/ 2>/dev/null; then echo "Forbidden MQ-internal string detected"; exit 1; fi'
+        language: system
+        pass_filenames: false
