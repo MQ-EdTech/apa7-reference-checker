@@ -7,10 +7,12 @@ from .base import (
     UnpaywallClient,
     UrlCheckClient,
 )
+from .crossref import HttpxCrossRefClient
 
 __all__ = [
     "Clients",
     "CrossRefClient",
+    "HttpxCrossRefClient",
     "LookupResult",
     "LookupStatus",
     "OpenLibraryClient",
