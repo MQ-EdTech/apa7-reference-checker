@@ -1,0 +1,32 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - www.google.com
+      User-Agent:
+      - python-httpx/0.28.1
+    method: HEAD
+    uri: https://www.google.com/this-page-should-not-exist-apa7test
+  response:
+    body:
+      string: ''
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Type:
+      - text/html; charset=UTF-8
+      Date:
+      - Fri, 05 Jun 2026 13:52:28 GMT
+      Transfer-Encoding:
+      - chunked
+    status:
+      code: 404
+      message: Not Found
+version: 1

@@ -10,6 +10,7 @@ from .base import (
 from .crossref import HttpxCrossRefClient
 from .openlibrary import HttpxOpenLibraryClient
 from .unpaywall import HttpxUnpaywallClient
+from .url_check import HttpxUrlCheckClient
 
 __all__ = [
     "Clients",
@@ -17,6 +18,7 @@ __all__ = [
     "HttpxCrossRefClient",
     "HttpxOpenLibraryClient",
     "HttpxUnpaywallClient",
+    "HttpxUrlCheckClient",
     "LookupResult",
     "LookupStatus",
     "OpenLibraryClient",

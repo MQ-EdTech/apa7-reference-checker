@@ -1,0 +1,44 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - example.com
+      User-Agent:
+      - python-httpx/0.28.1
+    method: HEAD
+    uri: https://example.com/
+  response:
+    body:
+      string: ''
+    headers:
+      Age:
+      - '5769'
+      CF-RAY:
+      - a06fa86eac347d6d-SYD
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/html
+      Date:
+      - Fri, 05 Jun 2026 13:52:27 GMT
+      Server:
+      - cloudflare
+      allow:
+      - GET, HEAD
+      cf-cache-status:
+      - HIT
+      last-modified:
+      - Thu, 04 Jun 2026 23:01:41 GMT
+    status:
+      code: 200
+      message: OK
+version: 1
