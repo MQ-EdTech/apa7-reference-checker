@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json as _json
 from dataclasses import asdict
+from typing import Any
 
 from apa7_validator.models import Report, Severity
 
@@ -29,14 +30,20 @@ def render_human(report: Report) -> str:
 
 
 def render_json(report: Report) -> str:
-    payload = {
-        "references": [asdict(r) for r in report.references],
-        "citations": [asdict(c) for c in report.citations],
-        "issues": [{**asdict(i), "severity": i.severity.value} for i in report.issues],
+    references: list[dict[str, Any]] = [asdict(r) for r in report.references]
+    citations: list[dict[str, Any]] = [asdict(c) for c in report.citations]
+    issues: list[dict[str, Any]] = [
+        {**asdict(i), "severity": i.severity.value} for i in report.issues
+    ]
+    # `ref_type` is an Enum; convert to its name string.
+    for r in references:
+        ref_type = r["ref_type"]
+        r["ref_type"] = ref_type.name if hasattr(ref_type, "name") else str(ref_type)
+    payload: dict[str, Any] = {
+        "references": references,
+        "citations": citations,
+        "issues": issues,
         "warnings": report.warnings,
         "degraded_checks": report.degraded_checks,
     }
-    # `ref_type` is an Enum; convert.
-    for r in payload["references"]:
-        r["ref_type"] = r["ref_type"].name if hasattr(r["ref_type"], "name") else str(r["ref_type"])
     return _json.dumps(payload, indent=2) + "\n"
