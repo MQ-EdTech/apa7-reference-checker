@@ -131,9 +131,10 @@ def inject_comment_xml(source_bytes: bytes, comments: list[CommentSpec]) -> byte
                     data = _patch_content_types(data)
                 elif item.filename == "word/_rels/document.xml.rels":
                     data = _patch_document_rels(data)
-                zout.writestr(item, data)
-                if item.filename == "word/comments.xml":
+                elif item.filename == "word/comments.xml":
+                    data = comments_xml
                     wrote_comments = True
+                zout.writestr(item, data)
             if not wrote_comments:
                 zout.writestr("word/comments.xml", comments_xml)
     return out_buf.getvalue()
@@ -156,7 +157,7 @@ def annotate_docx_from_source(
     specs: list[CommentSpec] = []
     for i, iss in enumerate(report.issues):
         kind, ref = position_map.to_source(iss.position.start)
-        if kind != "docx_run":
+        if kind != "docx_run" or ref is None:
             continue
         para_idx = ref[0]
         anchor_text = extracted_text[iss.position.start : iss.position.end]
