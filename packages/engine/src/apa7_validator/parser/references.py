@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 
 from ..models import Author, Position, Reference, ReferenceType
-from .ref_types import try_parse_book, try_parse_book_chapter, try_parse_journal
+from .ref_types import try_parse_book, try_parse_book_chapter, try_parse_journal, try_parse_website
 
 
 def parse_references(section: str, body_offset: int) -> list[Reference]:
@@ -39,7 +39,7 @@ def parse_references(section: str, body_offset: int) -> list[Reference]:
 
 def _try_parse_any(raw: str, position_start: int) -> Reference | None:
     # Order matters: more specific parsers first. Tasks 11-14 extend this.
-    for fn in (try_parse_journal, try_parse_book_chapter, try_parse_book):
+    for fn in (try_parse_journal, try_parse_book_chapter, try_parse_website, try_parse_book):
         ref = fn(raw, position_start)
         if ref is not None:
             return ref
