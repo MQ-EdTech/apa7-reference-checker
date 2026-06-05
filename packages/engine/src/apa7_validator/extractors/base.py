@@ -25,6 +25,8 @@ class PositionMap:
     def to_source(self, extracted_offset: int) -> tuple[PositionKind, Any]:
         if self.kind == "char_offset":
             return ("char_offset", extracted_offset)
+        if not self.entries:
+            return (self.kind, None)
         # Find the last entry whose offset <= extracted_offset.
         lo, hi = 0, len(self.entries) - 1
         best = 0
