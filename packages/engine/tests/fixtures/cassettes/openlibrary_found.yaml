@@ -1,0 +1,109 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - openlibrary.org
+      User-Agent:
+      - python-httpx/0.28.1
+    method: GET
+    uri: https://openlibrary.org/isbn/9780201896831.json
+  response:
+    body:
+      string: ''
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/html
+      Date:
+      - Fri, 05 Jun 2026 13:47:11 GMT
+      Referrer-Policy:
+      - no-referrer-when-downgrade
+      Server:
+      - nginx/1.30.2
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-method:
+      - GET, OPTIONS
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '86400'
+      location:
+      - https://openlibrary.org/books/OL657041M.json
+      x-ol-stats:
+      - '"IB 1 0.029 MC 1 0.001 TT 0 0.031"'
+    status:
+      code: 302
+      message: Found
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - openlibrary.org
+      User-Agent:
+      - python-httpx/0.28.1
+    method: GET
+    uri: https://openlibrary.org/books/OL657041M.json
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAEA61Vy27cNhT9FUJrj4akqOfOcJ9I0jaN2yySQKAoeoY1RQ5IaRzH8L/3khzZwcAB
+        WrQriVeX93nO0UN2WAat/F46n3XoQ3Y5jspbs3kvvZb32acLlM180LK3N72wZpZmjo4PmZZHqeEO
+        Di5q1hLes2OOSI5+WMzIJ3DlGnG9s07N+8lnwfH+EPweslsIDv7bYNjOVvRqllP2+HgB374Vmebo
+        nZyUWSbplPh/YxcQ27pZmR3iZkRecif2cPrPRbMLdMO9UGLREkGWH6WRjqdEWiNhp0EZOFvjY+YD
+        hyriMf9HucOGhD2e9keKqsKwEXiWbRufrGmCzzrwwdpbv/31dVXWmJE3IQdf5r1N+39ezMkInpS2
+        JSaX2WMIc4JLf9BcyASZ3yUfYVIX6A33PiJGc7Nb+C59fw75ZN5KGGwKx3en7gMaGAL8dKEkbxcn
+        ZO+ksG5MaRTvYDQwr8MyS3dwducwHq3hfdM24c63HVoSHfjEv1jTYYpJ01YNo7H5r4xl0bL23Aie
+        BQvG4W7o2rpZrxfk3Biu43NjSBSzT4Cobs/dkbuxHxSwDjrgh70S/SRnPvKZb/mQw5ecsBxqhKHT
+        Ir9ZtM4nuEoIpRXDNesIps8RQ9jeLNpvf/nj9bv+t5+uetLglpbxEiWM1lVNWrhUl6E2Nb7QxZnx
+        q4JjeGH1AjDl26vTy0Z+nh0X84ZiSgkp8AbjlBBQVxdNUXUESk3ysWrD9V4iBCtE9ibAPq4RxT3y
+        CVgdqWbsHFHzsCrFqhCQMFR/5HqJQvOn1Tkq0KpeI+IeUSCuHPOP7qP52Qi9jNIjZUb5Wfo8A2WB
+        3kGT1I1KZHnIdtaODtCbABYGzKqQJb7VT29x0UVVtG0bO7pTtyqsCyD7IXvL6rosaRmd4qEiRepc
+        q8Fxdz9HHQm+BLO2yj6FUuQYSd4b0MkA/cLF2kNOvwx/SZFkNrt6YVBRGJ4+PAtsHqtbGQoVxsgE
+        NhLCrnZhFzO7qL4TX8KX4b73M3gHxQ61fAek0iP6PkevDEhDTHdn3e1J+FcliaagD2VNq+J9IvTL
+        An/qNi5BW5DuXo1xeoszXQBvV5C6qQjGbV21BGYEZYHOD9KFH8/hpCVVTcGu/GB6guP9JzJGhq6n
+        xOz1VEZOxlMieAiuhTAxQltjDCxJG7NCBzKFvAkTTQ1KAZuPEywqykiNm1jdKO/kfT9KoSZoR+ig
+        fWHHgQgkekCoaAbAiSTw0eHtZV3lFcpfVQytu0m2F0wpEOzGzyCGR+XhPwFRCgItnJ8FQHmWYa7n
+        7AlQmBUADW49MYhi3Gww22ByjYuONl2J84qWrKJpTRxSTnYMdPkXMWm5wcWGNteEdayGsDkuWcEY
+        /Nr/Bl7dz1NsCAAA
+    headers:
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 05 Jun 2026 13:47:14 GMT
+      Referrer-Policy:
+      - no-referrer-when-downgrade
+      Server:
+      - nginx/1.30.2
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-method:
+      - GET, OPTIONS
+      access-control-allow-origin:
+      - '*'
+      access-control-max-age:
+      - '86400'
+      x-ol-stats:
+      - '"MC 2 0.001 TT 0 0.008"'
+    status:
+      code: 200
+      message: OK
+version: 1
