@@ -26,3 +26,8 @@ quote-style = "double"
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["packages/engine/src", "packages/cli/src"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.0",
+]
