@@ -8,11 +8,15 @@ from .journal import parse_authors
 _RE = re.compile(
     r"""
     ^(?P<authors>.+?)\s*
-    \((?P<year>\d{4}[a-z]?)\)\.\s*
+    \((?P<year>\d{4}[a-z]?|n\.d\.(?:-[a-z])?)(?:,\s*[^)]+)?\)\.\s*
     (?P<title>[^.()]+?)\.?\s*
     (?:\(Report\s+No\.\s*(?P<report_no>[^)]+)\)\.?\s*)?
     (?P<publisher>[^.]+?)\.?\s*
-    (?:(?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+))?\s*$
+    (?:
+        (?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+)
+      |
+        (?P<url>https?://\S+)
+    )?\s*$
     """,
     re.VERBOSE,
 )
@@ -37,6 +41,7 @@ def try_parse_report(raw: str, position_start: int) -> Reference | None:
         title=m.group("title").strip(),
         publisher=m.group("publisher").strip(),
         doi=m.group("doi"),
+        url=m.group("url"),
         extras=extras,
         position=Position(start=position_start, end=position_start + len(raw)),
     )

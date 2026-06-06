@@ -8,9 +8,9 @@ from .journal import parse_authors
 _RE = re.compile(
     r"""
     ^(?P<authors>.+?)\s*
-    \((?P<year>n\.d\.|\d{4})(?:,\s*[^)]+)?\)\.\s*
+    \((?P<year>\d{4}[a-z]?|n\.d\.(?:-[a-z])?)(?:,\s*[^)]+)?\)\.\s*
     (?P<title>[^.]+?)\.\s*
-    (?P<container>[A-Z][^.]+?)\.\s*
+    (?:(?P<container>[A-Z][^.]+?)\.\s*)?
     (?P<url>https?://\S+)\s*$
     """,
     re.VERBOSE,
@@ -24,10 +24,10 @@ def try_parse_website(raw: str, position_start: int) -> Reference | None:
     return Reference(
         raw=raw,
         ref_type=ReferenceType.WEBSITE,
-        authors=parse_authors(m.group("authors")),
+        authors=parse_authors(m.group("authors").rstrip(".")),
         year=m.group("year"),
         title=m.group("title").strip(),
-        container=m.group("container").strip(),
+        container=m.group("container").strip() if m.group("container") else None,
         url=m.group("url"),
         position=Position(start=position_start, end=position_start + len(raw)),
     )

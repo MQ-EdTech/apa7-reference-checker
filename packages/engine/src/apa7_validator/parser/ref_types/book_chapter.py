@@ -13,14 +13,19 @@ _EN_DASH = chr(0x2013)
 _RE = re.compile(
     r"""
     ^(?P<authors>.+?)\s*
-    \((?P<year>\d{4}[a-z]?)\)\.\s*
+    \((?P<year>\d{4}[a-z]?|n\.d\.(?:-[a-z])?)(?:,\s*[^)]+)?\)\.\s*
     (?P<title>[^.]+?)\.\s*
     In\s+(?P<editors>[^()]+?)\s*\(Eds?\.\),\s*
     (?P<container>[^()]+?)\s*
     \(pp\.\s*(?P<pages>[\d\-"""
     + _EN_DASH
     + r"""]+)\)\.\s*
-    (?P<publisher>[A-Z][^.]+?)\.?\s*$
+    (?P<publisher>[A-Z][^.]+?)\.?\s*
+    (?:
+        (?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+)
+      |
+        (?P<url>https?://\S+)
+    )?\s*$
     """,
     re.VERBOSE,
 )
@@ -39,6 +44,8 @@ def try_parse_book_chapter(raw: str, position_start: int) -> Reference | None:
         container=m.group("container").strip(),
         pages=m.group("pages").strip(),
         publisher=m.group("publisher").strip(),
+        doi=m.group("doi"),
+        url=m.group("url"),
         extras={"editors": m.group("editors").strip()},
         position=Position(start=position_start, end=position_start + len(raw)),
     )

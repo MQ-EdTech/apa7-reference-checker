@@ -16,7 +16,7 @@ _PAGES_CHARS = r"\d\-" + _EN_DASH + r",\s"
 _RE = re.compile(
     r"""
     ^(?P<authors>.+?)\s*
-    \((?P<year>\d{4}[a-z]?)\)\.\s*
+    \((?P<year>\d{4}[a-z]?|n\.d\.(?:-[a-z])?)(?:,\s*[^)]+)?\)\.\s*
     (?P<title>[^.]+?)\.\s*
     (?P<container>[A-Z][^,]+),\s*
     (?P<volume>\d+)
@@ -25,7 +25,12 @@ _RE = re.compile(
     + _PAGES_CHARS
     + r"""]+))?
     \.?\s*
-    (?:(?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+))?
+    (?:
+        (?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+)
+      |
+        (?P<url>https?://\S+)
+    )?
+    \s*$
     """,
     re.VERBOSE,
 )
@@ -62,5 +67,6 @@ def try_parse_journal(raw: str, position_start: int) -> Reference | None:
         issue=m.group("issue"),
         pages=m.group("pages").strip() if m.group("pages") else None,
         doi=m.group("doi"),
+        url=m.group("url"),
         position=Position(start=position_start, end=position_start + len(raw)),
     )

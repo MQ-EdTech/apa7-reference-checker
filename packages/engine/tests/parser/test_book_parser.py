@@ -32,3 +32,13 @@ def test_parses_book_with_doi_colon_prefix():
     ref = try_parse_book(raw, position_start=0)
     assert ref is not None
     assert ref.doi == "10.5555/spm.2018"
+
+
+def test_parses_book_with_non_doi_trailing_url():
+    raw = (
+        "Bainbridge, W. S. (2012). Leadership in science and technology. "
+        "SAGE Publications. https://ebookcentral.proquest.com/test"
+    )
+    ref = try_parse_book(raw, position_start=0)
+    assert ref is not None
+    assert ref.url == "https://ebookcentral.proquest.com/test"

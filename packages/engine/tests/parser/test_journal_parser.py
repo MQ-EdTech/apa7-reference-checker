@@ -42,3 +42,22 @@ def test_parses_journal_with_doi_colon_prefix():
     ref = try_parse_journal(raw, position_start=0)
     assert ref is not None
     assert ref.doi == "10.1234/jot.2020.05"
+
+
+def test_parses_journal_with_non_doi_trailing_url():
+    raw = (
+        "Leonidou, C., Skarmeas, D. (2020). Grey Shades of Green. "
+        "Journal of Business Ethics, 12(3), 100-120. "
+        "https://www.jstor.org/stable/45022269"
+    )
+    ref = try_parse_journal(raw, position_start=0)
+    assert ref is not None
+    assert ref.doi is None
+    assert ref.url == "https://www.jstor.org/stable/45022269"
+
+
+def test_parses_journal_with_parenthetical_date_in_year():
+    raw = "Smith, J. (2025, February 6). Title. Journal of Things, 5(2), 100-120."
+    ref = try_parse_journal(raw, position_start=0)
+    assert ref is not None
+    assert ref.year == "2025"
