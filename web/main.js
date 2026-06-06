@@ -1,5 +1,5 @@
 import { runValidate, annotateDocx, warmup } from "./runtime.js";
-import { renderSummary, renderIssues, renderOverall } from "./render.js";
+import { renderSummary, renderIssues, renderOverall, generateFeedback } from "./render.js";
 
 const essayInput = document.getElementById("essay");
 const validateButton = document.getElementById("validate-button");
@@ -9,6 +9,7 @@ const summaryEl = document.getElementById("summary");
 const issuesEl = document.getElementById("issues");
 const downloadJsonButton = document.getElementById("download-json");
 const downloadDocxButton = document.getElementById("download-docx");
+const copyFeedbackButton = document.getElementById("copy-feedback");
 const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("file-input");
 const browseButton = document.getElementById("browse-button");
@@ -141,6 +142,22 @@ downloadJsonButton.addEventListener("click", () => {
   if (!lastReport) return;
   const blob = new Blob([JSON.stringify(lastReport, null, 2)], { type: "application/json" });
   triggerDownload(blob, "apa7-report.json");
+});
+
+copyFeedbackButton.addEventListener("click", async () => {
+  if (!lastReport) return;
+  const text = generateFeedback(lastReport);
+  try {
+    await navigator.clipboard.writeText(text);
+    const original = copyFeedbackButton.textContent;
+    copyFeedbackButton.textContent = "Copied!";
+    setTimeout(() => {
+      copyFeedbackButton.textContent = original;
+    }, 1500);
+  } catch (err) {
+    console.error(err);
+    setStatus(`Could not copy: ${err.message || String(err)}`);
+  }
 });
 
 downloadDocxButton.addEventListener("click", async () => {

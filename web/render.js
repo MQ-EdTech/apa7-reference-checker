@@ -125,38 +125,43 @@ const RUBRIC_SUPPRESSED_CODES = new Set([
   "deprecated_ibid",
 ]);
 
+function extractInstanceLabel(message) {
+  if (!message) return "";
+  const match = message.match(/'([^']+)'/);
+  return match ? match[1] : message;
+}
+
 export function renderIssues(report) {
   if (report.issues.length === 0) {
     return `<p class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">No issues found.</p>`;
   }
 
-  // Group by code|message so identical findings collapse into one card.
-  // Hide issues whose rule is already summarised in the Overall Feedback section.
+  // Group by code only. Within each code, collect unique instance labels with their lines.
   const groups = new Map();
   for (const iss of report.issues) {
     if (RUBRIC_SUPPRESSED_CODES.has(iss.code)) continue;
-    const key = `${iss.code}|${iss.message}`;
-    if (!groups.has(key)) {
-      groups.set(key, {
+    if (!groups.has(iss.code)) {
+      groups.set(iss.code, {
         code: iss.code,
         severity: iss.severity,
-        message: iss.message,
         suggestion: iss.suggestion,
-        target_kind: iss.target_kind,
-        lines: [],
+        instances: new Map(), // label -> Set(lines)
       });
     }
+    const g = groups.get(iss.code);
+    const label = extractInstanceLabel(iss.message);
+    if (!g.instances.has(label)) {
+      g.instances.set(label, new Set());
+    }
     if (typeof iss.line === "number") {
-      groups.get(key).lines.push(iss.line);
+      g.instances.get(label).add(iss.line);
     }
   }
 
-  // If filtering left nothing, show the empty-state message.
   if (groups.size === 0) {
     return `<p class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">No detailed issues — see the Overall feedback above.</p>`;
   }
 
-  // Sort groups by severity (error first), then by code.
   const severityOrder = { error: 0, warning: 1, info: 2 };
   const groupList = Array.from(groups.values()).sort((a, b) => {
     const sev = (severityOrder[a.severity] ?? 99) - (severityOrder[b.severity] ?? 99);
@@ -167,14 +172,24 @@ export function renderIssues(report) {
     <ul class="space-y-3">
       ${groupList.map((g) => {
         const badge = SEVERITY_BADGE[g.severity] || SEVERITY_BADGE.info;
+        const totalOccurrences = Array.from(g.instances.values()).reduce(
+          (acc, lineSet) => acc + Math.max(lineSet.size, 1),
+          0,
+        );
         const occurrenceBadge =
-          g.lines.length > 1
-            ? `<span class="ml-auto inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">${g.lines.length} occurrences</span>`
+          totalOccurrences > 1
+            ? `<span class="ml-auto inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">${totalOccurrences} occurrences</span>`
             : "";
-        const linesLine =
-          g.lines.length > 0
-            ? `<p class="mt-2 text-xs text-slate-500">Line${g.lines.length > 1 ? "s" : ""}: ${[...new Set(g.lines)].sort((a, b) => a - b).join(", ")}</p>`
-            : "";
+        const instanceItems = Array.from(g.instances.entries())
+          .map(([label, lineSet]) => {
+            const lines = Array.from(lineSet).sort((a, b) => a - b);
+            const lineStr =
+              lines.length > 0
+                ? ` <span class="text-xs text-slate-500">— line${lines.length > 1 ? "s" : ""} ${lines.join(", ")}</span>`
+                : "";
+            return `<li class="text-sm text-slate-700">${escapeHtml(label)}${lineStr}</li>`;
+          })
+          .join("");
         return `
           <li class="rounded-md border border-slate-200 bg-white p-4">
             <div class="flex items-center gap-2">
@@ -182,13 +197,69 @@ export function renderIssues(report) {
               <span class="text-sm font-medium text-slate-700" title="${escapeHtml(g.code)}">${escapeHtml(humaniseCode(g.code))}</span>
               ${occurrenceBadge}
             </div>
-            <p class="mt-2 text-sm text-slate-800">${escapeHtml(g.message)}</p>
-            ${g.suggestion ? `<p class="mt-1 text-sm text-slate-600">&#x21AA; ${escapeHtml(g.suggestion)}</p>` : ""}
-            ${linesLine}
+            <ul class="mt-2 list-disc pl-5 space-y-1">${instanceItems}</ul>
+            ${g.suggestion ? `<p class="mt-2 text-sm text-slate-600">↪ ${escapeHtml(g.suggestion)}</p>` : ""}
           </li>`;
       }).join("")}
     </ul>
   `;
+}
+
+export function generateFeedback(report) {
+  const lines = [];
+  lines.push("APA 7 Referencing Feedback");
+  lines.push("");
+
+  // Build the rubric line-items using the same RUBRIC_CHECKS evaluation logic
+  // as renderOverall, but as plain-text bullets.
+  const checks = RUBRIC_CHECKS.map((c) => ({ label: c.label, result: c.check(report) }));
+  for (const c of checks) {
+    const symbol = ({ pass: "✓", fail: "✗", partial: "~", manual: "i" })[c.result.status] || "i";
+    let line = `${symbol} ${c.label}`;
+    if (c.result.note) {
+      line += ` — ${c.result.note}`;
+    }
+    lines.push(line);
+  }
+
+  // Then list the specific orphan citations / typos that need addressing.
+  // Reuse the same grouping logic as renderIssues so this matches the UI.
+  const groups = new Map();
+  for (const iss of report.issues) {
+    if (RUBRIC_SUPPRESSED_CODES.has(iss.code)) continue;
+    if (!groups.has(iss.code)) {
+      groups.set(iss.code, { code: iss.code, suggestion: iss.suggestion, instances: new Map() });
+    }
+    const g = groups.get(iss.code);
+    const label = extractInstanceLabel(iss.message);
+    if (!g.instances.has(label)) g.instances.set(label, new Set());
+    if (typeof iss.line === "number") g.instances.get(label).add(iss.line);
+  }
+
+  if (groups.size > 0) {
+    lines.push("");
+    lines.push("Specific items to address:");
+    for (const g of groups.values()) {
+      lines.push("");
+      lines.push(`• ${humaniseCode(g.code)}:`);
+      for (const [label, lineSet] of g.instances.entries()) {
+        const sortedLines = Array.from(lineSet).sort((a, b) => a - b);
+        const lineStr = sortedLines.length > 0
+          ? ` (line${sortedLines.length > 1 ? "s" : ""} ${sortedLines.join(", ")})`
+          : "";
+        lines.push(`    - ${label}${lineStr}`);
+      }
+      if (g.suggestion) {
+        lines.push(`    Fix: ${g.suggestion}`);
+      }
+    }
+  }
+
+  lines.push("");
+  lines.push("---");
+  lines.push("Generated by the APA 7 Validator (https://mq-edtech.github.io/apa7-reference-checker/).");
+
+  return lines.join("\n");
 }
 
 export function renderOverall(report) {
