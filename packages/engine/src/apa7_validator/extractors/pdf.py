@@ -3,8 +3,6 @@ from __future__ import annotations
 import io
 from typing import Any
 
-import pymupdf
-
 from .base import ExtractionResult, ExtractorError, PositionMap
 
 
@@ -15,6 +13,18 @@ class PdfExtractor:
                 "invalid_input",
                 "PdfExtractor requires bytes, got str",
             )
+        try:
+            # pymupdf is an optional native dependency (see pyproject.toml
+            # `[project.optional-dependencies] native`). It's a C extension and
+            # not installable under Pyodide, so we import it lazily — the
+            # module loads fine without it; only extract() requires it.
+            import pymupdf
+        except ImportError as exc:
+            raise ExtractorError(
+                "pdf_extractor_unavailable",
+                "PDF extraction requires the 'native' extra (install via "
+                "`uv sync --extra native` or `pip install apa7-validator[native]`).",
+            ) from exc
         try:
             doc = pymupdf.open(stream=io.BytesIO(source), filetype="pdf")
         except Exception as exc:
