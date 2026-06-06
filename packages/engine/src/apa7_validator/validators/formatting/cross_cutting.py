@@ -9,7 +9,7 @@ _REF_BUILDER = IssueBuilder(target_kind="reference")
 _GLOBAL_BUILDER = IssueBuilder(target_kind="global")
 
 _DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
-_YEAR_RE = re.compile(r"^(?:\d{4}[a-z]?|n\.d\.)$")
+_YEAR_RE = re.compile(r"^(?:\d{4}[a-z]?|n\.d\.(?:-[a-z])?)$")
 _DEPRECATED_DOI_PREFIX_RE = re.compile(r"\bdoi:\s*10\.", re.IGNORECASE)
 
 
