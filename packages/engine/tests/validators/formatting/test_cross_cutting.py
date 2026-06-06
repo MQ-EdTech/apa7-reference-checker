@@ -1,7 +1,9 @@
 from apa7_validator.models import Author, Position, Reference, ReferenceType
 from apa7_validator.validators.formatting.cross_cutting import (
     check_alphabetical_order,
+    check_deprecated_phrases,
     check_doi_format,
+    check_reference_count,
     check_title_sentence_case,
     check_year_format,
 )
@@ -91,3 +93,52 @@ def test_canonical_doi_url_does_not_emit_deprecation_warning():
     )
     issues = check_doi_format(ref)
     assert all(i.code != "doi_surface_form_deprecated" for i in issues)
+
+
+def test_reference_count_below_minimum_emits_warning():
+    refs = [_ref(f"Author{i}") for i in range(5)]
+    issues = check_reference_count(refs)
+    assert any(i.code == "reference_count_below_minimum" for i in issues)
+
+
+def test_reference_count_at_minimum_clean():
+    refs = [_ref(f"Author{i}") for i in range(10)]
+    assert check_reference_count(refs) == []
+
+
+def test_deprecated_retrieved_from_warning():
+    ref = Reference(
+        raw="Smith, J. (2020). A page. Retrieved from https://example.com",
+        ref_type=ReferenceType.JOURNAL_ARTICLE,
+        authors=[Author(family="Smith", given_initials="J.")],
+        year="2020",
+        title="A page",
+        position=Position(0, 60),
+    )
+    issues = check_deprecated_phrases(ref)
+    assert any(i.code == "deprecated_retrieved_from" for i in issues)
+
+
+def test_deprecated_accessed_date_warning():
+    ref = Reference(
+        raw="Smith, J. (2020). A page. Accessed: 1 January 2021.",
+        ref_type=ReferenceType.WEBSITE,
+        authors=[Author(family="Smith", given_initials="J.")],
+        year="2020",
+        title="A page",
+        position=Position(0, 50),
+    )
+    issues = check_deprecated_phrases(ref)
+    assert any(i.code == "deprecated_accessed_date" for i in issues)
+
+
+def test_clean_reference_no_deprecated_phrases():
+    ref = Reference(
+        raw="Smith, J. (2020). A page. https://example.com",
+        ref_type=ReferenceType.WEBSITE,
+        authors=[Author(family="Smith", given_initials="J.")],
+        year="2020",
+        title="A page",
+        position=Position(0, 40),
+    )
+    assert check_deprecated_phrases(ref) == []

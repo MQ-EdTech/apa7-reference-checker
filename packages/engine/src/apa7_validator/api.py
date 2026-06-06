@@ -24,7 +24,9 @@ from .validators.formatting.book import check_book
 from .validators.formatting.book_chapter import check_book_chapter
 from .validators.formatting.cross_cutting import (
     check_alphabetical_order,
+    check_deprecated_phrases,
     check_doi_format,
+    check_reference_count,
     check_title_sentence_case,
     check_year_format,
 )
@@ -71,10 +73,12 @@ async def validate_async(
 
     formatting_issues: list[Issue] = []
     formatting_issues += check_alphabetical_order(references)
+    formatting_issues += check_reference_count(references)
     for ref in references:
         formatting_issues += check_doi_format(ref)
         formatting_issues += check_year_format(ref)
         formatting_issues += check_title_sentence_case(ref)
+        formatting_issues += check_deprecated_phrases(ref)
         formatting_issues += check_journal(ref)
         formatting_issues += check_book(ref)
         formatting_issues += check_book_chapter(ref)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-from ...models import Issue, Reference
+from ...models import Issue, Position, Reference
 from ..base import IssueBuilder
 
 _REF_BUILDER = IssueBuilder(target_kind="reference")
@@ -102,3 +102,79 @@ def check_title_sentence_case(ref: Reference) -> list[Issue]:
             )
         ]
     return []
+
+
+# ---------------------------------------------------------------------------
+# Source-count threshold
+# ---------------------------------------------------------------------------
+
+# Many first-year courses require 10+ sources.
+# The threshold is fixed in v1; could become a deployment-time config later.
+_DEFAULT_MIN_REFERENCES = 10
+
+
+def check_reference_count(
+    refs: list[Reference], *, minimum: int = _DEFAULT_MIN_REFERENCES
+) -> list[Issue]:
+    if len(refs) >= minimum:
+        return []
+    return [
+        _GLOBAL_BUILDER.warning(
+            code="reference_count_below_minimum",
+            message=(
+                f"Your reference list contains {len(refs)} sources; the assignment "
+                f"rubric typically requires at least {minimum}."
+            ),
+            position=Position(start=0, end=0),
+            suggestion=f"Add more sources to reach at least {minimum} references.",
+        )
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Deprecated-phrase detection
+# ---------------------------------------------------------------------------
+
+# Phrases from non-APA-7 styles that often leak into student references.
+_DEPRECATED_PHRASES = [
+    # (regex, code, message, suggestion)
+    (
+        re.compile(r"\bRetrieved\s+from\b", re.IGNORECASE),
+        "deprecated_retrieved_from",
+        "'Retrieved from' is APA 6 style — APA 7 omits this phrase when a URL is present.",
+        "Remove 'Retrieved from'; place the URL directly after the publisher/date.",
+    ),
+    (
+        re.compile(r"\baccessed\b\s*[:\-]", re.IGNORECASE),
+        "deprecated_accessed_date",
+        "'Accessed: <date>' is a Chicago/Harvard convention — APA 7 omits access dates for stable web pages.",
+        "Remove 'Accessed:' dates unless the page is unarchived and likely to change.",
+    ),
+    (
+        re.compile(r"\bn\.p\.\b", re.IGNORECASE),
+        "deprecated_no_publisher_marker",
+        "'n.p.' is from older bibliographic style — APA 7 simply omits the publisher field when unknown.",
+        "Delete the 'n.p.' marker.",
+    ),
+    (
+        re.compile(r"\bibid\b\.?", re.IGNORECASE),
+        "deprecated_ibid",
+        "'Ibid.' is a Chicago / footnote convention — APA 7 uses author-year citations only.",
+        "Replace 'Ibid.' with the full (Author, Year) citation.",
+    ),
+]
+
+
+def check_deprecated_phrases(ref: Reference) -> list[Issue]:
+    issues: list[Issue] = []
+    for pattern, code, message, suggestion in _DEPRECATED_PHRASES:
+        if pattern.search(ref.raw):
+            issues.append(
+                _REF_BUILDER.warning(
+                    code=code,
+                    message=message,
+                    position=ref.position,
+                    suggestion=suggestion,
+                )
+            )
+    return issues

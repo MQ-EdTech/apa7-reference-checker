@@ -11,48 +11,89 @@ function humaniseCode(code) {
     .replace(/^./, (c) => c.toUpperCase());
 }
 
-const RULE_SUMMARIES = {
-  // "always" rules surface in the overall feedback whenever they fire at all
-  // (regardless of how many references trigger them), and their individual
-  // per-instance cards are hidden from the details list to avoid duplication.
-  references_not_alphabetised: {
-    always: "Your reference list is not in alphabetical order.",
+const RUBRIC_CHECKS = [
+  {
+    id: "source_count",
+    label: "Uses ≥10 sources",
+    check: (report) => {
+      const n = report.references.length;
+      if (n === 0) return { status: "fail", note: "No references parsed." };
+      const belowMin = report.issues.some((i) => i.code === "reference_count_below_minimum");
+      if (belowMin) return { status: "fail", note: `Found ${n} sources; rubric expects at least 10.` };
+      return { status: "pass", note: `${n} sources found.` };
+    },
   },
-  hanging_indent_missing: {
-    target: "references",
-    half: "Most references lack the APA 7 hanging indent.",
-    quarter: "Several references lack the APA 7 hanging indent.",
+  {
+    id: "alphabetical",
+    label: "Reference list in alphabetical order",
+    check: (report) => {
+      const fail = report.issues.some((i) => i.code === "references_not_alphabetised");
+      return fail
+        ? { status: "fail", note: "Sort references by first author's surname." }
+        : { status: "pass" };
+    },
   },
-  journal_italics_missing: {
-    target: "references",
-    half: "Most journal titles are not italicised.",
-    quarter: "Several journal titles are not italicised.",
+  {
+    id: "complete",
+    label: "Reference list is complete",
+    check: (report) => {
+      const orphans = report.issues.filter((i) => i.code === "citation_without_reference").length;
+      const uncited = report.issues.filter((i) => i.code === "reference_uncited").length;
+      if (orphans > 0 && uncited > 0) {
+        return { status: "fail", note: `${orphans} citation(s) without a reference; ${uncited} unused reference(s).` };
+      }
+      if (orphans > 0) return { status: "fail", note: `${orphans} citation(s) without a matching reference list entry.` };
+      if (uncited > 0) return { status: "partial", note: `${uncited} reference(s) appear in the list but aren't cited in the body.` };
+      return { status: "pass" };
+    },
   },
-  book_title_italics_missing: {
-    target: "references",
-    half: "Most book titles are not italicised.",
-    quarter: "Several book titles are not italicised.",
+  {
+    id: "hanging",
+    label: "Reference list uses hanging indent",
+    check: (report) => {
+      const n = report.issues.filter((i) => i.code === "hanging_indent_missing").length;
+      if (n === 0) return { status: "pass" };
+      const refCount = report.references.length;
+      if (refCount > 0 && n / refCount >= 0.5) return { status: "fail", note: `${n} of ${refCount} references lack hanging indent.` };
+      return { status: "partial", note: `${n} reference(s) lack hanging indent.` };
+    },
   },
-  title_not_sentence_case: {
-    target: "references",
-    half: "Most reference titles use title case instead of sentence case.",
-    quarter: "Several reference titles use title case instead of sentence case.",
+  {
+    id: "no_other_styles",
+    label: "No phrases from other referencing styles",
+    check: (report) => {
+      const codes = ["deprecated_retrieved_from", "deprecated_accessed_date", "deprecated_no_publisher_marker", "deprecated_ibid"];
+      const found = report.issues.filter((i) => codes.includes(i.code));
+      if (found.length === 0) return { status: "pass" };
+      const labels = [...new Set(found.map((i) => i.code.replace("deprecated_", "").replace(/_/g, " ")))];
+      return { status: "fail", note: `Detected: ${labels.join(", ")}.` };
+    },
   },
-  doi_malformed: {
-    target: "references",
-    half: "Most DOIs are malformed.",
-    quarter: "Several DOIs are malformed.",
+  // Two criteria not yet automated — note them as "manual check" so students
+  // know they still apply.
+  {
+    id: "source_mix",
+    label: "Source mix: 5 academic + 5 non-academic",
+    check: () => ({
+      status: "manual",
+      note: "Automatic classification of academic vs non-academic sources is not yet supported. Confirm manually.",
+    }),
   },
-  citation_without_reference: {
-    target: "citations",
-    half: "Most in-text citations don't have a matching reference list entry.",
-    quarter: "Several in-text citations don't have a matching reference list entry.",
+  {
+    id: "quote_pages",
+    label: "Direct-quote citations include page numbers",
+    check: () => ({
+      status: "manual",
+      note: "Direct-quote detection is not yet supported. Confirm page numbers manually for any quoted passages.",
+    }),
   },
-  reference_uncited: {
-    target: "references",
-    half: "Most reference list entries are not cited in the body.",
-    quarter: "Several reference list entries are not cited in the body.",
-  },
+];
+
+const RUBRIC_STATUS_BADGE = {
+  pass: { label: "✓", classes: "bg-emerald-100 text-emerald-800" },
+  fail: { label: "✗", classes: "bg-red-100 text-red-800" },
+  partial: { label: "~", classes: "bg-amber-100 text-amber-800" },
+  manual: { label: "i", classes: "bg-slate-100 text-slate-700" },
 };
 
 export function renderSummary(report) {
@@ -74,12 +115,15 @@ export function renderSummary(report) {
 }
 
 // Rule codes whose per-instance cards are suppressed because they're already
-// summarised in the Overall Feedback section.
-const ALWAYS_SUMMARISED_CODES = new Set(
-  Object.entries(RULE_SUMMARIES)
-    .filter(([, summary]) => "always" in summary)
-    .map(([code]) => code),
-);
+// covered by a rubric line in the Overall section.
+const RUBRIC_SUPPRESSED_CODES = new Set([
+  "references_not_alphabetised",
+  "reference_count_below_minimum",
+  "deprecated_retrieved_from",
+  "deprecated_accessed_date",
+  "deprecated_no_publisher_marker",
+  "deprecated_ibid",
+]);
 
 export function renderIssues(report) {
   if (report.issues.length === 0) {
@@ -90,7 +134,7 @@ export function renderIssues(report) {
   // Hide issues whose rule is already summarised in the Overall Feedback section.
   const groups = new Map();
   for (const iss of report.issues) {
-    if (ALWAYS_SUMMARISED_CODES.has(iss.code)) continue;
+    if (RUBRIC_SUPPRESSED_CODES.has(iss.code)) continue;
     const key = `${iss.code}|${iss.message}`;
     if (!groups.has(key)) {
       groups.set(key, {
@@ -148,38 +192,23 @@ export function renderIssues(report) {
 }
 
 export function renderOverall(report) {
-  const refCount = report.references.length || 1;
-  const citCount = report.citations.length || 1;
-
-  // Count distinct refs/citations per rule code (use position.start as identity).
-  const codeCounts = new Map();
-  for (const iss of report.issues) {
-    const key = iss.code;
-    if (!codeCounts.has(key)) codeCounts.set(key, new Set());
-    codeCounts.get(key).add(iss.position?.start ?? "");
-  }
-
-  const lines = [];
-  for (const [code, summary] of Object.entries(RULE_SUMMARIES)) {
-    const n = codeCounts.get(code)?.size ?? 0;
-    if (n === 0) continue;
-    if ("always" in summary) {
-      lines.push({ text: summary.always, count: n });
-      continue;
-    }
-    const denom = summary.target === "references" ? refCount : citCount;
-    const ratio = n / denom;
-    if (ratio >= 0.5) lines.push({ text: summary.half, count: n });
-    else if (ratio >= 0.25) lines.push({ text: summary.quarter, count: n });
-  }
-
-  if (lines.length === 0) return "";
-
+  const checks = RUBRIC_CHECKS.map((c) => ({ label: c.label, result: c.check(report) }));
   return `
-    <div class="rounded-md border border-amber-200 bg-amber-50 p-4">
-      <h3 class="text-sm font-semibold text-amber-900">Overall feedback</h3>
-      <ul class="mt-2 space-y-1 text-sm text-amber-900">
-        ${lines.map(l => `<li>• ${escapeHtml(l.text)}</li>`).join("")}
+    <div class="rounded-md border border-slate-200 bg-white p-4">
+      <h3 class="text-sm font-semibold text-slate-900">APA 7 rubric check</h3>
+      <p class="mt-1 text-xs text-slate-500">A first-pass against your assignment's APA 7 rubric. Items marked <span class="font-medium">i</span> need a manual check.</p>
+      <ul class="mt-3 space-y-2 text-sm">
+        ${checks.map((c) => {
+          const badge = RUBRIC_STATUS_BADGE[c.result.status] || RUBRIC_STATUS_BADGE.manual;
+          return `
+            <li class="flex items-start gap-3">
+              <span class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${badge.classes}">${badge.label}</span>
+              <div class="flex-1">
+                <div class="font-medium text-slate-900">${escapeHtml(c.label)}</div>
+                ${c.result.note ? `<div class="mt-0.5 text-xs text-slate-600">${escapeHtml(c.result.note)}</div>` : ""}
+              </div>
+            </li>`;
+        }).join("")}
       </ul>
     </div>
   `;
