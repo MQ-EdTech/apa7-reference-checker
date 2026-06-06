@@ -37,7 +37,7 @@ from .validators.formatting.styling import (
 )
 from .validators.formatting.website import check_website
 
-__all__ = ["Format", "IssueBuilder", "annotate_docx", "validate"]
+__all__ = ["Format", "IssueBuilder", "annotate_docx", "validate", "validate_async"]
 
 Format = Literal["text", "docx", "pdf"]
 
@@ -56,7 +56,7 @@ def _extract(source: bytes | str, format: Format) -> ExtractionResult:
     raise ValueError(f"unknown format: {format!r}")
 
 
-def validate(
+async def validate_async(
     source: bytes | str,
     format: Format,
     *,
@@ -102,7 +102,7 @@ def validate(
         )
 
     cross_issues = check_cross_matching(citations, references)
-    existence_issues, degraded = asyncio.run(check_existence(references, clients))
+    existence_issues, degraded = await check_existence(references, clients)
 
     warnings = [] if found else ["no_reference_list_found"]
 
@@ -115,6 +115,15 @@ def validate(
         warnings=warnings,
         degraded_checks=degraded,
     )
+
+
+def validate(
+    source: bytes | str,
+    format: Format,
+    *,
+    clients: Clients | None = None,
+) -> Report:
+    return asyncio.run(validate_async(source, format, clients=clients))
 
 
 def annotate_docx(source: bytes | None, report: Report) -> bytes:

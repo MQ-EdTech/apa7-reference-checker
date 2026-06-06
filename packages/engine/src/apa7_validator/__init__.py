@@ -1,6 +1,6 @@
 """APA 7 reference and citation validator."""
 
-from .api import Format, annotate_docx, validate
+from .api import Format, annotate_docx, validate, validate_async
 from .models import (
     Author,
     Citation,
@@ -26,4 +26,5 @@ __all__ = [
     "Severity",
     "annotate_docx",
     "validate",
+    "validate_async",
 ]
