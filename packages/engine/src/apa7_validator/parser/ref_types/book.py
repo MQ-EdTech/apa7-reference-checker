@@ -16,7 +16,7 @@ _RE = re.compile(
     \((?P<year>\d{4}[a-z]?)\)\.\s*
     (?P<title>[^.]+?)\.\s*
     (?P<publisher>[A-Z][^.]+?)\.?\s*
-    (?:https?://(?:dx\.)?doi\.org/(?P<doi>\S+))?\s*$
+    (?:(?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+))?\s*$
     """,
     re.VERBOSE,
 )

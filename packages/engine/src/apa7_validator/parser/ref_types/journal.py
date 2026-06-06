@@ -25,7 +25,7 @@ _RE = re.compile(
     + _PAGES_CHARS
     + r"""]+))?
     \.?\s*
-    (?:https?://(?:dx\.)?doi\.org/(?P<doi>\S+))?
+    (?:(?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+))?
     """,
     re.VERBOSE,
 )

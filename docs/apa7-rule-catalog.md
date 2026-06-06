@@ -9,6 +9,7 @@ Each rule has a stable machine-readable code. The implementation lives under
 |------|----------|-------------|
 | `references_not_alphabetised` | warning | Reference list out of order |
 | `doi_malformed` | error | DOI does not match `10.<reg>/<suffix>` |
+| `doi_surface_form_deprecated` | warning | DOI uses the deprecated `doi:` prefix instead of the APA 7-canonical `https://doi.org/` URL |
 | `year_malformed` | error | Year is not 4 digits or `n.d.` |
 | `title_not_sentence_case` | warning | Title appears to use title case |
 

@@ -25,3 +25,10 @@ def test_rejects_journal_shape():
     raw = "Smith, J. (2020). A paper. Journal, 5(2), 100-120."
     ref = try_parse_book(raw, position_start=0)
     assert ref is None
+
+
+def test_parses_book_with_doi_colon_prefix():
+    raw = "Brown, K. (2018). Statistical methods. Academic Press. doi:10.5555/spm.2018"
+    ref = try_parse_book(raw, position_start=0)
+    assert ref is not None
+    assert ref.doi == "10.5555/spm.2018"

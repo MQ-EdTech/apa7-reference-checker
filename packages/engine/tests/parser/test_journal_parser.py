@@ -35,3 +35,10 @@ def test_returns_none_for_clearly_non_journal():
     # No volume/issue/pages — not a journal article.
     ref = try_parse_journal(raw, position_start=0)
     assert ref is None
+
+
+def test_parses_journal_with_doi_colon_prefix():
+    raw = "Smith, J. (2020). A paper. Journal of Things, 5(2), 100-120. doi:10.1234/jot.2020.05"
+    ref = try_parse_journal(raw, position_start=0)
+    assert ref is not None
+    assert ref.doi == "10.1234/jot.2020.05"

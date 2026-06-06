@@ -10,6 +10,7 @@ _GLOBAL_BUILDER = IssueBuilder(target_kind="global")
 
 _DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
 _YEAR_RE = re.compile(r"^(?:\d{4}[a-z]?|n\.d\.)$")
+_DEPRECATED_DOI_PREFIX_RE = re.compile(r"\bdoi:\s*10\.", re.IGNORECASE)
 
 
 def check_alphabetical_order(refs: list[Reference]) -> list[Issue]:
@@ -33,18 +34,26 @@ def check_alphabetical_order(refs: list[Reference]) -> list[Issue]:
 
 
 def check_doi_format(ref: Reference) -> list[Issue]:
-    if ref.doi is None:
-        return []
-    if not _DOI_RE.match(ref.doi):
-        return [
+    issues: list[Issue] = []
+    if ref.doi is not None and not _DOI_RE.match(ref.doi):
+        issues.append(
             _REF_BUILDER.error(
                 code="doi_malformed",
                 message=f"DOI '{ref.doi}' is not in the expected '10.<registrant>/<suffix>' form",
                 position=ref.position,
                 suggestion="Format DOIs as 'https://doi.org/10.xxxx/yyyy' with the bare DOI starting '10.'",
             )
-        ]
-    return []
+        )
+    if _DEPRECATED_DOI_PREFIX_RE.search(ref.raw):
+        issues.append(
+            _REF_BUILDER.warning(
+                code="doi_surface_form_deprecated",
+                message="DOI uses deprecated 'doi:' prefix; APA 7 expects 'https://doi.org/...'",
+                position=ref.position,
+                suggestion="Replace 'doi:10.xxxx/yyyy' with 'https://doi.org/10.xxxx/yyyy'",
+            )
+        )
+    return issues
 
 
 def check_year_format(ref: Reference) -> list[Issue]:

@@ -63,3 +63,31 @@ def test_title_sentence_case_flags_title_case():
 
 def test_title_sentence_case_accepts_sentence_case():
     assert check_title_sentence_case(_ref("Smith", title="A paper about things")) == []
+
+
+def test_deprecated_doi_prefix_emits_warning():
+    ref = Reference(
+        raw="Smith, J. (2020). A paper. Journal, 5(2), 100-120. doi:10.1234/abc",
+        ref_type=ReferenceType.JOURNAL_ARTICLE,
+        authors=[Author(family="Smith", given_initials="J.")],
+        year="2020",
+        title="A paper",
+        doi="10.1234/abc",
+        position=Position(0, 100),
+    )
+    issues = check_doi_format(ref)
+    assert any(i.code == "doi_surface_form_deprecated" for i in issues)
+
+
+def test_canonical_doi_url_does_not_emit_deprecation_warning():
+    ref = Reference(
+        raw="Smith, J. (2020). A paper. Journal, 5(2). https://doi.org/10.1234/abc",
+        ref_type=ReferenceType.JOURNAL_ARTICLE,
+        authors=[Author(family="Smith", given_initials="J.")],
+        year="2020",
+        title="A paper",
+        doi="10.1234/abc",
+        position=Position(0, 100),
+    )
+    issues = check_doi_format(ref)
+    assert all(i.code != "doi_surface_form_deprecated" for i in issues)

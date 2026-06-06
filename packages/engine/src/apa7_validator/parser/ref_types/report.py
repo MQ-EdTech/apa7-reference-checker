@@ -12,7 +12,7 @@ _RE = re.compile(
     (?P<title>[^.()]+?)\.?\s*
     (?:\(Report\s+No\.\s*(?P<report_no>[^)]+)\)\.?\s*)?
     (?P<publisher>[^.]+?)\.?\s*
-    (?:https?://(?:dx\.)?doi\.org/(?P<doi>\S+))?\s*$
+    (?:(?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+))?\s*$
     """,
     re.VERBOSE,
 )
