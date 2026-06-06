@@ -17,3 +17,22 @@ def test_parses_report_without_number():
     ref = try_parse_report(raw, position_start=0)
     assert ref is not None
     assert ref.publisher == "OECD Publishing"
+
+
+def test_does_not_misclassify_book_containing_un_substring():
+    # "Foundations" contains lowercase 'un' — used to false-positive the
+    # case-insensitive UN hint and route to the report parser.
+    raw = "Smith, J. (2020). Foundations of climate research. Earth Press."
+    assert try_parse_report(raw, position_start=0) is None
+
+
+def test_does_not_misclassify_book_containing_who_substring():
+    # "Whole" or "whose" used to false-positive the case-insensitive WHO hint.
+    raw = "Smith, J. (2020). The whole story. Earth Press."
+    assert try_parse_report(raw, position_start=0) is None
+
+
+def test_un_acronym_in_authority_position_still_matches():
+    raw = "UN Statistics Division. (2022). World population prospects. UN."
+    ref = try_parse_report(raw, position_start=0)
+    assert ref is not None

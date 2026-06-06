@@ -31,3 +31,11 @@ def test_duplicate_entries_get_distinct_positions():
     # Positions must be distinct — second entry starts after first ends.
     assert refs[0].position.start < refs[1].position.start
     assert refs[1].position.start >= refs[0].position.end
+
+
+def test_smith_foundations_book_is_classified_as_book():
+    section = "Smith, J. (2020). Foundations of climate research. Earth Press."
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    assert refs[0].ref_type is ReferenceType.BOOK
+    assert refs[0].publisher == "Earth Press"

@@ -17,7 +17,7 @@ _RE = re.compile(
     re.VERBOSE,
 )
 
-_REPORT_HINT = re.compile(r"report|bureau|department|OECD|UN|WHO", re.IGNORECASE)
+_REPORT_HINT = re.compile(r"(?i:\b(?:report|bureau|department)\b)|\b(?:OECD|UN|WHO)\b")
 
 
 def try_parse_report(raw: str, position_start: int) -> Reference | None:
