@@ -184,3 +184,41 @@ def test_splits_parenthesised_numbered_references():
     )
     refs = parse_references(section, body_offset=0)
     assert len(refs) == 2
+
+
+def test_fallback_handles_parenthetical_date():
+    section = "Starbucks Australia. (2025, February 6). The 101 of Starbucks sustainability."
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    assert refs[0].authors[0].family == "Starbucks Australia"
+    assert refs[0].year == "2025"
+
+
+def test_fallback_handles_nd_with_letter_suffix():
+    section = "Saba, O. (n.d.-a). Equality, Diversity and Inclusion. UTS Canvas."
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    assert refs[0].authors[0].family == "Saba"
+    assert refs[0].year == "n.d.-a"
+
+
+def test_fallback_skips_eds_paren_before_year():
+    section = (
+        "Alves, H. J., Galan-Ladero, M. M., & Galera-Casquet, C. (Eds.). (2021). "
+        "Cause-Related Marketing. Springer."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    assert refs[0].authors[0].family == "Alves"
+    assert refs[0].year == "2021"
+
+
+def test_fallback_handles_year_letter_plus_date():
+    section = (
+        "Apple. (2022a, March 24). Apple's US$4.7B in Green Bonds Supports "
+        "Innovative Green Technology. Apple Newsroom."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    assert refs[0].authors[0].family == "Apple"
+    assert refs[0].year == "2022a"

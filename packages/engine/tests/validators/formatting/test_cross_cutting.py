@@ -142,3 +142,13 @@ def test_clean_reference_no_deprecated_phrases():
         position=Position(0, 40),
     )
     assert check_deprecated_phrases(ref) == []
+
+
+def test_year_format_accepts_nd_with_letter_suffix():
+    # Same-author-no-date disambiguation: "Saba, O. (n.d.-a)"
+    assert check_year_format(_ref("Smith", year="n.d.-a")) == []
+    assert check_year_format(_ref("Smith", year="n.d.-b")) == []
+
+
+def test_year_format_still_rejects_garbage():
+    assert any(i.code == "year_malformed" for i in check_year_format(_ref("Smith", year="2")))

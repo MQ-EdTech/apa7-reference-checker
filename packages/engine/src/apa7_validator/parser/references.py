@@ -73,7 +73,16 @@ looks_like_new_ref = _looks_like_new_ref
 _FALLBACK_RE = re.compile(
     r"""
     ^\s*(?P<authors_raw>[^(]+?)
-    \s*\((?P<year>\d{4}[a-z]?)\)
+    (?:                                       # optionally skip non-year parens
+        \s*\(
+        (?!\s*(?:\d{4}|n\.d\.))               # negative lookahead: NOT a year-paren
+        [^)]*\)
+        [.\s]*                                # allow ". " between closing paren and next paren
+    )*
+    \s*\(
+    (?P<year>\d{4}[a-z]?|n\.d\.(?:-[a-z])?)   # the year capture
+    (?:,\s*[^)]+)?                            # optional ", February 6" / ", March 15"
+    \)
     """,
     re.VERBOSE,
 )
@@ -86,9 +95,13 @@ def _fallback_author_year(raw: str) -> tuple[str, str] | None:
     m = _FALLBACK_RE.match(raw)
     if not m:
         return None
-    authors_raw = m.group("authors_raw").rstrip(".").strip()
+    authors_raw_raw = m.group("authors_raw").strip()
+    # Check person-list pattern before stripping the trailing period so that
+    # "Saba, O." still matches even though .rstrip(".") would remove it.
+    is_person_list = bool(_PERSON_LIST_RE.match(authors_raw_raw))
+    authors_raw = authors_raw_raw.rstrip(".").strip()
     year = m.group("year")
-    if _PERSON_LIST_RE.match(authors_raw):
+    if is_person_list:
         # Person list: take just the first surname.
         first = _FIRST_SURNAME_RE.match(authors_raw)
         if first:
