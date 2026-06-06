@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>APA 7 Validator — Pyodide Spike</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 80ch; margin: 2rem auto; padding: 0 1rem; }
+  #status { font-style: italic; color: #555; }
+  pre { background: #f5f5f5; padding: 1rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+  .error { color: #c00; }
+</style>
+</head>
+<body>
+<h1>APA 7 Validator — Pyodide Spike</h1>
+<p>Phase 0 feasibility test: load Pyodide, install the engine, run validate() on a hardcoded reference.</p>
+<p>Input: <code>"Smith, J. (2020). Title. Journal, 1(1), 1-10."</code></p>
+<p id="status">Booting…</p>
+<pre id="output">(no output yet)</pre>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+  async function main() {
+    const status = document.getElementById("status");
+    const output = document.getElementById("output");
+
+    try {
+      status.textContent = "Loading Pyodide…";
+      const pyodide = await loadPyodide({
+        indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/",
+      });
+
+      status.textContent = "Loading lxml + micropip…";
+      await pyodide.loadPackage(["micropip", "lxml"]);
+
+      status.textContent = "Installing python-docx + structlog…";
+      const micropip = pyodide.pyimport("micropip");
+      await micropip.install(["python-docx", "structlog"]);
+
+      status.textContent = "Installing apa7_validator wheel…";
+      await micropip.install("./dist/apa7_validator-0.1.0-py3-none-any.whl");
+
+      status.textContent = "Running validate()…";
+      const result = await pyodide.runPythonAsync(`
+import json
+from apa7_validator import validate
+
+text = "Smith, J. (2020). Title. Journal, 1(1), 1-10."
+try:
+    report = validate(text, "text")
+    out = {
+        "ok": True,
+        "references_count": len(report.references),
+        "citations_count": len(report.citations),
+        "issues_count": len(report.issues),
+        "warnings": report.warnings,
+        "degraded_checks": report.degraded_checks,
+    }
+except Exception as exc:
+    out = {"ok": False, "error_type": type(exc).__name__, "error_msg": str(exc)}
+
+json.dumps(out, indent=2)
+      `);
+
+      status.textContent = "Done.";
+      output.textContent = result;
+    } catch (err) {
+      status.textContent = "Error during boot.";
+      status.classList.add("error");
+      output.textContent = String(err) + "\n" + (err.stack || "");
+    }
+  }
+  main();
+</script>
+</body>
+</html>

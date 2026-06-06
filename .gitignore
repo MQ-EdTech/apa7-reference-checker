@@ -23,6 +23,9 @@ node_modules/
 .svelte-kit/
 dist/
 
+# Spike: committed wheels served statically — must NOT be ignored
+!web/spike/dist/*.whl
+
 # Editor / OS
 .vscode/
 .idea/
