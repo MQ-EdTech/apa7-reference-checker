@@ -146,3 +146,41 @@ def test_mixed_personal_and_org_references():
     )
     refs = parse_references(section, body_offset=0)
     assert len(refs) == 4
+
+
+def test_splits_bullet_pointed_references():
+    section = (
+        "• Smith, J. (2020). Foundations of climate research. Earth Press.\n"
+        "• Jones, A., & Lee, B. (2021). New analyses. Climate Journal, 5(2)."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 2
+    assert refs[0].authors[0].family == "Smith"
+    assert refs[1].authors[0].family == "Jones"
+
+
+def test_splits_dash_bulleted_references():
+    section = (
+        "- Smith, J. (2020). Foundations. Earth Press.\n"
+        "- Jones, A. (2021). New analyses. Journal of Things, 5(2)."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 2
+
+
+def test_splits_numbered_references():
+    section = (
+        "1. Smith, J. (2020). Foundations. Earth Press.\n"
+        "2. Jones, A. (2021). New analyses. Journal of Things, 5(2)."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 2
+
+
+def test_splits_parenthesised_numbered_references():
+    section = (
+        "(1) Smith, J. (2020). Foundations. Earth Press.\n"
+        "(2) Jones, A. (2021). New analyses. Journal of Things, 5(2)."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 2

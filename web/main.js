@@ -1,5 +1,5 @@
 import { runValidate, annotateDocx, warmup } from "./runtime.js";
-import { renderSummary, renderIssues } from "./render.js";
+import { renderSummary, renderIssues, renderOverall } from "./render.js";
 
 const essayInput = document.getElementById("essay");
 const validateButton = document.getElementById("validate-button");
@@ -123,7 +123,8 @@ validateButton.addEventListener("click", async () => {
     lastReport = result.report;
     lastJobId = result.job_id;
     summaryEl.innerHTML = renderSummary(result.report);
-    issuesEl.innerHTML = renderIssues(result.report);
+    const overall = renderOverall(result.report);
+    issuesEl.innerHTML = (overall ? overall + '<div class="mt-6">' : '') + renderIssues(result.report) + (overall ? '</div>' : '');
     resultsSection.classList.remove("hidden");
     // Always show DOCX download — engine generates a fresh DOCX even for text inputs.
     downloadDocxButton.classList.remove("hidden");
