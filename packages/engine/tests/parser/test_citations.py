@@ -48,3 +48,21 @@ def test_ignores_non_citation_parens():
     text = "There were many results (most positive) overall."
     cits = parse_citations(text)
     assert cits == []
+
+
+def test_parses_semicolon_separated_pair():
+    text = "Multiple studies confirm (Jones & Lee, 2021; Garcia et al., 2022)."
+    cits = parse_citations(text)
+    assert len(cits) == 2
+    assert cits[0].authors == ["Jones", "Lee"]
+    assert cits[0].year == "2021"
+    assert cits[1].authors == ["Garcia et al."]
+    assert cits[1].year == "2022"
+
+
+def test_parses_semicolon_triple_with_secondary():
+    text = "(Smith, 2020; Jones, 2021)"
+    cits = parse_citations(text)
+    assert len(cits) == 2
+    assert cits[0].authors == ["Smith"]
+    assert cits[1].authors == ["Jones"]
