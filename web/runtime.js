@@ -39,6 +39,20 @@ export async function warmup(onProgress) {
   await loadPyodideOnce(onProgress);
 }
 
+export async function annotateDocx(jobId) {
+  // Reuses the cached pyodide instance — assumes runValidate has already been called.
+  const pyodide = await loadPyodideOnce(() => {});
+  pyodide.globals.set("job_id_input", jobId);
+  const result = pyodide.runPython(`
+from apa7_validator.browser import annotate
+annotate(job_id_input)
+  `);
+  // Convert Python bytes to JS Uint8Array.
+  const bytes = result.toJs({ create_proxies: false });
+  result.destroy();
+  return bytes;
+}
+
 export async function runValidate(text, format, onProgress) {
   const pyodide = await loadPyodideOnce(onProgress);
   onProgress("Validating…");

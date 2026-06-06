@@ -17,7 +17,26 @@
   </header>
 
   <main class="mx-auto max-w-4xl px-6 py-8">
-    <section id="input-section" class="space-y-4">
+    <section id="upload-section" class="space-y-3">
+      <div
+        id="dropzone"
+        class="flex flex-col items-center justify-center rounded-md border-2 border-dashed border-slate-300 bg-white px-6 py-10 text-center transition-colors hover:border-slate-400"
+        tabindex="0"
+        role="button"
+        aria-label="Drop a DOCX file here or click to choose"
+      >
+        <svg class="mb-3 h-10 w-10 text-slate-400" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
+        <p class="text-sm font-medium text-slate-700">Drop a <code>.docx</code> here</p>
+        <p class="mt-1 text-xs text-slate-500">or <button id="browse-button" type="button" class="text-slate-700 underline">browse files</button></p>
+        <p id="selected-file" class="mt-3 hidden text-sm text-slate-600"></p>
+        <input id="file-input" type="file" accept=".docx" class="sr-only">
+      </div>
+      <p class="text-center text-xs text-slate-500">— or paste essay text below —</p>
+    </section>
+
+    <section id="input-section" class="space-y-4 mt-4">
       <label for="essay" class="block text-sm font-medium text-slate-700">Essay text</label>
       <textarea
         id="essay"
@@ -40,15 +59,24 @@
     </section>
 
     <section id="results-section" class="mt-10 hidden space-y-6">
-      <div class="flex items-baseline justify-between">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
         <h2 class="text-xl font-semibold">Report</h2>
-        <button
-          id="download-json"
-          type="button"
-          class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
-        >
-          Download JSON report
-        </button>
+        <div class="flex gap-2">
+          <button
+            id="download-docx"
+            type="button"
+            class="hidden rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Download annotated DOCX
+          </button>
+          <button
+            id="download-json"
+            type="button"
+            class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Download JSON report
+          </button>
+        </div>
       </div>
       <div id="summary" class="grid grid-cols-2 gap-4 sm:grid-cols-4"></div>
       <div id="issues"></div>
