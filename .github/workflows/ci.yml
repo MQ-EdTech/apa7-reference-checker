@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.5.x"
+      - name: Install Python
+        run: uv python install 3.12
+      - name: Install workspace
+        run: uv sync --all-packages --all-extras
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format check
+        run: uv run ruff format --check .
+      - name: Forbid MQ-internal strings
+        run: |
+          if grep -rEn "mq\.edu\.au|OneID|s[0-9]{8}" \
+              --include="*.py" --include="*.md" \
+              --include="*.yaml" --include="*.yml" --include="*.toml" \
+              --exclude-dir=superpowers \
+              packages/ apps/ docs/ 2>/dev/null; then
+            echo "Forbidden MQ-internal string detected"
+            exit 1
+          fi
+      - name: Type check
+        run: uv run pyright packages/engine/src
+      - name: Test engine
+        run: uv run pytest packages/engine/tests -v

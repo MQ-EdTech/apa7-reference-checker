@@ -33,6 +33,8 @@ dist/
 *.pdf
 !tests/fixtures/**/*.docx
 !tests/fixtures/**/*.pdf
+!packages/engine/tests/fixtures/**/*.docx
+!packages/engine/tests/fixtures/**/*.pdf
 
 # Local data
 /data/

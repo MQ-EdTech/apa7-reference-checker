@@ -608,7 +608,7 @@ Expected: FAIL — `AttributeError: module 'apa7_validator' has no attribute 'va
 # packages/engine/src/apa7_validator/api.py
 """Public API of the validator engine.
 
-The actual implementations are wired in Task 37 (validate) and Task 36
+The actual implementations are wired in Task 37 (validate) and Task 38
 (annotate_docx). This module defines the stable surface area.
 """
 
@@ -650,7 +650,7 @@ def annotate_docx(
     was text or PDF), a fresh DOCX is generated from the extracted text and
     comments injected into that.
     """
-    raise NotImplementedError("Wired in Task 36")
+    raise NotImplementedError("Wired in Task 38")
 ```
 
 - [ ] **Step 4: Re-export from package root**
@@ -5864,5 +5864,3 @@ uv run ruff check . && uv run ruff format --check .
 ```
 
 This completes plan #1. The next plan (#2 — API + Worker + Docker) wraps this engine in a FastAPI service and arq worker with `docker-compose`.
-
-

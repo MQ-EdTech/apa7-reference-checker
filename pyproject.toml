@@ -1,0 +1,35 @@
+# pyproject.toml
+[project]
+name = "apa7-reference-checker"
+version = "0.0.0"
+description = "APA 7 reference and citation validator (workspace root)"
+requires-python = ">=3.12"
+
+[tool.uv.workspace]
+members = ["packages/engine", "packages/cli"]
+
+[tool.uv.sources]
+apa7-validator = { workspace = true }
+apa7-check = { workspace = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "RUF", "ASYNC"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+include = ["packages/engine/src", "packages/cli/src"]
+
+[dependency-groups]
+dev = [
+    "lxml-stubs>=0.5.1",
+    "pre-commit>=4.6.0",
+]
