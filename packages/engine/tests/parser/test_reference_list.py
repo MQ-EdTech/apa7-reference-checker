@@ -52,3 +52,54 @@ def test_does_not_match_toc_entry_with_trailing_dots():
     # The bare "References" on the third-from-end line SHOULD be.
     assert found is True
     assert "Smith" in refs
+
+
+def test_handles_non_breaking_space_in_heading():
+    text = "Body.\n\n5. References\xa0\n\nSmith, J. (2020). Title. Journal."
+    _body, refs, found = split_body_and_references(text)
+    assert found is True
+    assert "Smith" in refs
+
+
+def test_handles_singular_reference_heading():
+    text = "Body.\n\nReference \n\nSmith, J. (2020). Title. Journal."
+    _body, refs, found = split_body_and_references(text)
+    assert found is True
+    assert "Smith" in refs
+
+
+def test_handles_roman_numeral_prefix_uppercase():
+    text = "Body.\n\nV. References\n\nSmith, J. (2020). Title. Journal."
+    _body, refs, found = split_body_and_references(text)
+    assert found is True
+    assert "Smith" in refs
+
+
+def test_handles_roman_numeral_prefix_lowercase():
+    text = "Body.\n\niv. References\n\nSmith, J. (2020). Title. Journal."
+    _body, _refs, found = split_body_and_references(text)
+    assert found is True
+
+
+def test_heuristic_fallback_when_no_heading():
+    # No heading at all; references just appear at the end. Three ref-start
+    # lines should be enough to trigger the heuristic.
+    body_filler = "Body paragraph.\n" * 30
+    refs = (
+        "Smith, J. (2020). Title. Journal of Things, 5(2), 100-120.\n"
+        "Jones, A. (2021). Another paper. Climate Journal, 8(4), 200-225.\n"
+        "Brown, K. (2018). Statistical methods. Academic Press."
+    )
+    text = body_filler + "\n" + refs
+    _body, refs_out, found = split_body_and_references(text)
+    assert found is True
+    assert "Smith" in refs_out
+    assert "Jones" in refs_out
+    assert "Brown" in refs_out
+
+
+def test_heuristic_fallback_does_not_trigger_on_too_few_refs():
+    # Only 1 reference-shaped line at the end — not enough for the heuristic.
+    text = "Body filler. " * 50 + "\nSmith, J. (2020). Title. Earth Press."
+    _body, _refs, found = split_body_and_references(text)
+    assert found is False

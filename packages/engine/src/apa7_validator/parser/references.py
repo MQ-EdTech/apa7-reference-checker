@@ -58,6 +58,11 @@ def _looks_like_new_ref(line: str) -> bool:
     return bool(_NEW_REF_RE.match(stripped))
 
 
+# Public alias so sibling modules can import without triggering private-usage
+# linting rules.
+looks_like_new_ref = _looks_like_new_ref
+
+
 # Fallback extractor: when no specific ref-type parser matches, pull the
 # author-family stub and the year from the raw text so cross-matching can
 # still link the UNKNOWN ref to its citations.
