@@ -7,8 +7,7 @@ from typing import Annotated
 import typer
 from apa7_validator import annotate_docx, validate
 from apa7_validator.clients import Clients
-
-from apa7_check.render import render_human, render_json
+from apa7_validator.render import render_human, render_json
 
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 

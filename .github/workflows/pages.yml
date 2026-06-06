@@ -1,0 +1,53 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "packages/engine/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.5.x"
+      - name: Install Python
+        run: uv python install 3.12
+      - name: Install workspace
+        run: uv sync --all-packages --all-extras
+      - name: Build engine wheel
+        run: uv build --wheel packages/engine
+      - name: Copy wheel into web/dist/
+        run: |
+          mkdir -p web/dist
+          cp dist/apa7_validator-*.whl web/dist/
+          ls -la web/dist/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

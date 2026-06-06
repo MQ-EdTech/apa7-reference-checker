@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Validate APA 7 references and in-text citations in your essay. Runs entirely in your browser.">
+  <title>APA 7 Validator</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+  <header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto max-w-4xl px-6 py-8">
+      <h1 class="text-2xl font-bold tracking-tight">APA 7 Reference Validator</h1>
+      <p class="mt-2 text-slate-600">Paste an essay; get a report on its APA 7 references and in-text citations.</p>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-4xl px-6 py-8">
+    <section id="upload-section" class="space-y-3">
+      <div
+        id="dropzone"
+        class="flex flex-col items-center justify-center rounded-md border-2 border-dashed border-slate-300 bg-white px-6 py-10 text-center transition-colors hover:border-slate-400"
+        tabindex="0"
+        role="button"
+        aria-label="Drop a DOCX file here or click to choose"
+      >
+        <svg class="mb-3 h-10 w-10 text-slate-400" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
+        <p class="text-sm font-medium text-slate-700">Drop a <code>.docx</code> here</p>
+        <p class="mt-1 text-xs text-slate-500">or <button id="browse-button" type="button" class="text-slate-700 underline">browse files</button></p>
+        <p id="selected-file" class="mt-3 hidden text-sm text-slate-600"></p>
+        <input id="file-input" type="file" accept=".docx" class="sr-only">
+      </div>
+      <p class="text-center text-xs text-slate-500">— or paste essay text below —</p>
+    </section>
+
+    <section id="input-section" class="space-y-4 mt-4">
+      <label for="essay" class="block text-sm font-medium text-slate-700">Essay text</label>
+      <textarea
+        id="essay"
+        rows="12"
+        class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20"
+        placeholder="Paste your essay here. Include both body text with in-text citations and a References section…"
+      ></textarea>
+
+      <div class="flex items-center gap-4">
+        <button
+          id="validate-button"
+          type="button"
+          class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:cursor-not-allowed disabled:bg-slate-400"
+          disabled
+        >
+          Validate
+        </button>
+        <p id="status" class="text-sm italic text-slate-600" aria-live="polite">Loading Python runtime…</p>
+      </div>
+    </section>
+
+    <section id="results-section" class="mt-10 hidden space-y-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="text-xl font-semibold">Report</h2>
+        <div class="flex gap-2">
+          <button
+            id="download-docx"
+            type="button"
+            class="hidden rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Download annotated DOCX
+          </button>
+          <button
+            id="download-json"
+            type="button"
+            class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Download JSON report
+          </button>
+        </div>
+      </div>
+      <div id="summary" class="grid grid-cols-2 gap-4 sm:grid-cols-4"></div>
+      <div id="issues"></div>
+    </section>
+  </main>
+
+  <footer class="mt-12 border-t border-slate-200 bg-white">
+    <div class="mx-auto max-w-4xl px-6 py-6 text-sm text-slate-600">
+      <p>Your essay is processed entirely in your browser. Nothing is uploaded to any server.</p>
+      <p class="mt-2">Existence checks (DOI / ISBN / URL lookups) are disabled in the browser due to CORS restrictions. <a class="underline" href="https://github.com/MQ-EdTech/apa7-reference-checker">Install the CLI</a> for full validation.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
