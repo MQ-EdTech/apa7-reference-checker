@@ -8,13 +8,32 @@ from __future__ import annotations
 
 import json
 import uuid
+from bisect import bisect_right
 
 from .api import Format, annotate_docx, validate_async
 from .clients import Clients
+from .extractors import DocxExtractor, PdfExtractor
 from .models import Report
 from .render import render_json
 
 _REPORT_CACHE: dict[str, tuple[Report, bytes | None]] = {}
+
+
+def _extract_text(source: bytes | str, format: Format) -> str:
+    """Extract plain text from source bytes/str for line-number computation."""
+    if format == "text":
+        if isinstance(source, bytes):
+            return source.decode("utf-8")
+        return source
+    if format == "docx":
+        if isinstance(source, str):
+            raise TypeError("DOCX requires bytes, got str")
+        return DocxExtractor().extract(source).text
+    if format == "pdf":
+        if isinstance(source, str):
+            raise TypeError("PDF requires bytes, got str")
+        return PdfExtractor().extract(source).text
+    raise ValueError(f"unknown format: {format!r}")
 
 
 async def run(source: bytes | str, format: Format) -> str:
@@ -26,15 +45,27 @@ async def run(source: bytes | str, format: Format) -> str:
     # Clear previous cache — single-user browser session, only one active job.
     _REPORT_CACHE.clear()
 
+    # Extract text to compute 1-based line numbers for each issue.
+    text = _extract_text(source, format)
+    line_starts = [0]
+    for i, ch in enumerate(text):
+        if ch == "\n":
+            line_starts.append(i + 1)
+
     report = await validate_async(source, format, clients=Clients.dry_run())
     job_id = str(uuid.uuid4())
     src_bytes = source if isinstance(source, bytes) else None
     _REPORT_CACHE[job_id] = (report, src_bytes)
 
+    payload = json.loads(render_json(report))
+    for iss in payload["issues"]:
+        offset = iss["position"]["start"]
+        iss["line"] = bisect_right(line_starts, offset)
+
     return json.dumps(
         {
             "job_id": job_id,
-            "report": json.loads(render_json(report)),
+            "report": payload,
         }
     )
 

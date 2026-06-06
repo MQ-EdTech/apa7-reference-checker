@@ -57,3 +57,16 @@ def test_run_clears_previous_cache_entries():
     # The cache should now have only the second job's entry.
     assert first_keys.isdisjoint(second_keys)
     assert len(second_keys) == 1
+
+
+def test_run_includes_line_numbers_on_issues():
+    _reset_cache()
+    # Three lines; the orphan citation is on line 1.
+    text = "Climate is warming (Jones, 2099).\n\nReferences\n\nSmith, J. (2020). Foundations of climate research. Earth Press."
+    result_str = asyncio.run(run(text, "text"))
+    result = json.loads(result_str)
+    # The orphan citation_without_reference issue should be on line 1.
+    orphan = next(
+        i for i in result["report"]["issues"] if i["code"] == "citation_without_reference"
+    )
+    assert orphan["line"] == 1
