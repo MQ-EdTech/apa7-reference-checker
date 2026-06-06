@@ -12,6 +12,12 @@ function humaniseCode(code) {
 }
 
 const RULE_SUMMARIES = {
+  // "always" rules surface in the overall feedback whenever they fire at all
+  // (regardless of how many references trigger them), and their individual
+  // per-instance cards are hidden from the details list to avoid duplication.
+  references_not_alphabetised: {
+    always: "Your reference list is not in alphabetical order.",
+  },
   hanging_indent_missing: {
     target: "references",
     half: "Most references lack the APA 7 hanging indent.",
@@ -67,14 +73,24 @@ export function renderSummary(report) {
     .join("");
 }
 
+// Rule codes whose per-instance cards are suppressed because they're already
+// summarised in the Overall Feedback section.
+const ALWAYS_SUMMARISED_CODES = new Set(
+  Object.entries(RULE_SUMMARIES)
+    .filter(([, summary]) => "always" in summary)
+    .map(([code]) => code),
+);
+
 export function renderIssues(report) {
   if (report.issues.length === 0) {
     return `<p class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">No issues found.</p>`;
   }
 
   // Group by code|message so identical findings collapse into one card.
+  // Hide issues whose rule is already summarised in the Overall Feedback section.
   const groups = new Map();
   for (const iss of report.issues) {
+    if (ALWAYS_SUMMARISED_CODES.has(iss.code)) continue;
     const key = `${iss.code}|${iss.message}`;
     if (!groups.has(key)) {
       groups.set(key, {
@@ -89,6 +105,11 @@ export function renderIssues(report) {
     if (typeof iss.line === "number") {
       groups.get(key).lines.push(iss.line);
     }
+  }
+
+  // If filtering left nothing, show the empty-state message.
+  if (groups.size === 0) {
+    return `<p class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">No detailed issues — see the Overall feedback above.</p>`;
   }
 
   // Sort groups by severity (error first), then by code.
@@ -142,6 +163,10 @@ export function renderOverall(report) {
   for (const [code, summary] of Object.entries(RULE_SUMMARIES)) {
     const n = codeCounts.get(code)?.size ?? 0;
     if (n === 0) continue;
+    if ("always" in summary) {
+      lines.push({ text: summary.always, count: n });
+      continue;
+    }
     const denom = summary.target === "references" ? refCount : citCount;
     const ratio = n / denom;
     if (ratio >= 0.5) lines.push({ text: summary.half, count: n });
