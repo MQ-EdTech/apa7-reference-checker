@@ -70,3 +70,17 @@ def test_run_includes_line_numbers_on_issues():
         i for i in result["report"]["issues"] if i["code"] == "citation_without_reference"
     )
     assert orphan["line"] == 1
+
+
+def test_run_includes_tier_on_each_reference():
+    _reset_cache()
+    text = (
+        "Climate is warming (Smith, 2020).\n\n"
+        "References\n\n"
+        "Smith, J. (2020). Foundations of climate research. Earth Press."
+    )
+    result_str = asyncio.run(run(text, "text"))
+    result = json.loads(result_str)
+    refs = result["report"]["references"]
+    assert all("tier" in r for r in refs)
+    assert all(r["tier"] in (1, 3) for r in refs)

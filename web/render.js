@@ -69,16 +69,33 @@ const RUBRIC_CHECKS = [
       return { status: "fail", note: `Detected: ${labels.join(", ")}.` };
     },
   },
-  // Two criteria not yet automated — note them as "manual check" so students
-  // know they still apply.
   {
-    id: "source_mix",
-    label: "Source mix: 5 academic + 5 non-academic",
-    check: () => ({
-      status: "manual",
-      note: "Automatic classification of academic vs non-academic sources is not yet supported. Confirm manually.",
-    }),
+    id: "no_library_proxy",
+    label: "References cite canonical sources (not library proxies)",
+    check: (report) => {
+      const n = report.issues.filter((i) => i.code === "reference_uses_library_proxy_url").length;
+      if (n === 0) return { status: "pass" };
+      return {
+        status: "fail",
+        note: `${n} reference${n > 1 ? "s use" : " uses"} a library-proxy URL — replace with the canonical source.`,
+      };
+    },
   },
+  {
+    id: "source_quality",
+    label: "Source quality",
+    check: (report) => {
+      const tier1 = report.references.filter((r) => r.tier === 1).length;
+      const tier3 = report.references.filter((r) => r.tier === 3).length;
+      const note = `Tier 1 (peer-reviewed / books): ${tier1}. Tier 3 (other / unverified): ${tier3}.`;
+      if (tier1 >= 5) return { status: "pass", note };
+      if (tier1 >= 3) return { status: "partial", note };
+      return { status: "fail", note: note + " Aim for at least 5 Tier 1 sources." };
+    },
+  },
+  // One criterion not yet automated — note it as "manual check" so students
+  // know it still applies.
+
   {
     id: "quote_pages",
     label: "Direct-quote citations include page numbers",
@@ -123,6 +140,7 @@ const RUBRIC_SUPPRESSED_CODES = new Set([
   "deprecated_accessed_date",
   "deprecated_no_publisher_marker",
   "deprecated_ibid",
+  "reference_uses_library_proxy_url",
 ]);
 
 function extractInstanceLabel(message) {
