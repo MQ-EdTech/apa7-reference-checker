@@ -15,6 +15,7 @@ from .clients import Clients
 from .extractors import DocxExtractor, PdfExtractor
 from .models import Report
 from .render import render_json
+from .tiering import classify_tier
 
 _REPORT_CACHE: dict[str, tuple[Report, bytes | None]] = {}
 
@@ -61,6 +62,9 @@ async def run(source: bytes | str, format: Format) -> str:
     for iss in payload["issues"]:
         offset = iss["position"]["start"]
         iss["line"] = bisect_right(line_starts, offset)
+
+    for ref_dict, ref in zip(payload["references"], report.references, strict=False):
+        ref_dict["tier"] = classify_tier(ref)
 
     return json.dumps(
         {

@@ -38,6 +38,7 @@ from .validators.formatting.styling import (
     check_journal_italics,
 )
 from .validators.formatting.website import check_website
+from .validators.library_proxy import check_library_proxy_url
 
 __all__ = ["Format", "IssueBuilder", "annotate_docx", "validate", "validate_async"]
 
@@ -79,6 +80,7 @@ async def validate_async(
         formatting_issues += check_year_format(ref)
         formatting_issues += check_title_sentence_case(ref)
         formatting_issues += check_deprecated_phrases(ref)
+        formatting_issues += check_library_proxy_url(ref)
         formatting_issues += check_journal(ref)
         formatting_issues += check_book(ref)
         formatting_issues += check_book_chapter(ref)
