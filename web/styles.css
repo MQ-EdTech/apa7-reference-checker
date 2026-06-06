@@ -1,0 +1,9 @@
+/* Light overrides on top of Tailwind. */
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.5;
+}
