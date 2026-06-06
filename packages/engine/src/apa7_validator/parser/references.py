@@ -12,33 +12,74 @@ from .ref_types import (
     try_parse_website,
 )
 
+# A line looks like the START of a new reference when it begins with:
+#   - "Lastname, F." or "Lastname, F. M." (personal name + initials)
+#   - "Lastname et al." (Latin abbreviation)
+#   - "Capitalized Word [Word ...]." followed by "(YYYY)" (org name + year)
+_NEW_REF_RE = re.compile(
+    r"""
+    ^(?:
+        # Personal name pattern: "Smith, J." or "Smith-Jones, J. K." etc.
+        [A-Z][a-zA-Z\-']+,\s+[A-Z]\.
+      |
+        # "et al." form: "Smith et al."
+        [A-Z][a-zA-Z\-']+\s+et\s+al\.
+      |
+        # Organisation form: "Capital [Word ...] . (YYYY)"
+        [A-Z][\w'\-]+(?:\s+[A-Z][\w'\-]+)*\.\s+\(\d{4}
+    )
+    """,
+    re.VERBOSE,
+)
+
+
+def _looks_like_new_ref(line: str) -> bool:
+    return bool(_NEW_REF_RE.match(line))
+
+
+def _prev_continues_author_list(prev: str) -> bool:
+    """Author lists wrap with a trailing comma or ampersand on the previous line."""
+    stripped = prev.rstrip()
+    return stripped.endswith((",", "&"))
+
+
+def _split_into_entries(section: str) -> list[str]:
+    lines = [line.strip() for line in section.split("\n") if line.strip()]
+    entries: list[str] = []
+    current: list[str] = []
+    for line in lines:
+        prev = current[-1] if current else ""
+        if current and _looks_like_new_ref(line) and not _prev_continues_author_list(prev):
+            entries.append(" ".join(current).strip())
+            current = [line]
+        else:
+            current.append(line)
+    if current:
+        entries.append(" ".join(current).strip())
+    return entries
+
 
 def parse_references(section: str, body_offset: int) -> list[Reference]:
     """Split a references section into entries and parse each into a `Reference`.
 
-    Entries are separated by blank lines OR by a newline followed by a line
-    that starts with a capital letter (heuristic: each new APA reference
-    begins with an author surname, e.g. "Smith, J." or "Jones, A., & Lee").
-    This handles both double-newline (text/PDF) and single-newline (DOCX)
-    paragraph separators.
+    Handles wrapped lines (each visible line in the DOCX becomes a separate
+    ``\\n``-separated text line) by detecting which lines begin a new entry and
+    joining continuation lines with a single space.
     """
     if not section.strip():
         return []
-
-    # First normalise: replace a newline that is immediately followed by an
-    # uppercase letter + comma/period/space (APA author pattern) with a double
-    # newline so the existing blank-line splitter can do the rest.
-    normalised = re.sub(r"\n(?=[A-Z][a-zA-Z'\-]+(,| [A-Z]\.))", "\n\n", section)
-    raw_entries = [chunk.strip() for chunk in re.split(r"\n\s*\n", normalised) if chunk.strip()]
+    entries = _split_into_entries(section)
     refs: list[Reference] = []
-    search_from = 0  # track where the next find should start
-    for entry in raw_entries:
-        # Find absolute position within original text.
-        local = section.find(entry, search_from)
-        if local < 0:
-            # Fallback — shouldn't normally happen
-            local = search_from
-        start = local + body_offset
+    search_from = 0
+    for entry in entries:
+        local = (
+            section.find(entry[:60], search_from)
+            if len(entry) >= 60
+            else section.find(entry, search_from)
+        )
+        # If the joined entry doesn't appear verbatim in the section (because we
+        # collapsed newlines into spaces), fall back to search_from.
+        start = (local + body_offset) if local >= 0 else (search_from + body_offset)
         parsed = _try_parse_any(entry, start)
         if parsed is None:
             parsed = Reference(
@@ -50,12 +91,11 @@ def parse_references(section: str, body_offset: int) -> list[Reference]:
                 position=Position(start=start, end=start + len(entry)),
             )
         refs.append(parsed)
-        search_from = local + len(entry)
+        search_from = (local + len(entry)) if local >= 0 else (search_from + len(entry))
     return refs
 
 
 def _try_parse_any(raw: str, position_start: int) -> Reference | None:
-    # Order matters: more specific parsers first. Tasks 11-14 extend this.
     for fn in (
         try_parse_ai_source,
         try_parse_journal,

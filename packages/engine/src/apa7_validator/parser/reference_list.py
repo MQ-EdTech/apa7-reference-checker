@@ -3,7 +3,10 @@ from __future__ import annotations
 import re
 
 _HEADING_RE = re.compile(
-    r"^[ \t]*(references|reference list|bibliography|works cited)[ \t]*:?[ \t]*$",
+    r"^[ \t]*"
+    r"(?:\d+(?:\.\d+)*[.\s]+)?"  # optional numeric prefix: "5.0 " / "5. " / "5.1 " / "1. "
+    r"(references|reference list|bibliography|works cited)"
+    r"[ \t]*:?[ \t]*$",
     re.IGNORECASE | re.MULTILINE,
 )
 
