@@ -13,10 +13,14 @@ _EN_DASH = chr(0x2013)
 _RE = re.compile(
     r"""
     ^(?P<authors>.+?)\s*
-    \((?P<year>\d{4}[a-z]?)\)\.\s*
+    \((?P<year>\d{4}[a-z]?|n\.d\.(?:-[a-z])?)(?:,\s*[^)]+)?\)\.\s*
     (?P<title>[^.]+?)\.\s*
     (?P<publisher>[A-Z][^.]+?)\.?\s*
-    (?:(?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+))?\s*$
+    (?:
+        (?:https?://(?:dx\.)?doi\.org/|doi:\s*)(?P<doi>\S+)
+      |
+        (?P<url>https?://\S+)
+    )?\s*$
     """,
     re.VERBOSE,
 )
@@ -38,5 +42,6 @@ def try_parse_book(raw: str, position_start: int) -> Reference | None:
         title=m.group("title").strip(),
         publisher=m.group("publisher").strip(),
         doi=m.group("doi"),
+        url=m.group("url"),
         position=Position(start=position_start, end=position_start + len(raw)),
     )
