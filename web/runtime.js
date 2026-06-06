@@ -62,7 +62,15 @@ export async function runValidate(text, format, onProgress) {
   const pyodide = await loadPyodideOnce(onProgress);
   onProgress("Validating…");
 
-  pyodide.globals.set("source_input", text);
+  // For Uint8Array input (DOCX bytes), convert explicitly to Python bytes —
+  // Pyodide's default conversion wraps typed arrays as JsProxy, which the
+  // engine's bytes-expecting code (io.BytesIO, .decode, etc.) rejects with
+  // "a bytes-like object is required, not 'pyodide.ffi.JsProxy'".
+  // Strings pass through unchanged.
+  const sourceForPython =
+    text instanceof Uint8Array ? pyodide.toPy(text) : text;
+
+  pyodide.globals.set("source_input", sourceForPython);
   pyodide.globals.set("fmt_input", format);
 
   const resultJson = await pyodide.runPythonAsync(`
