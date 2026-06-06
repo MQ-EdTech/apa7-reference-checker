@@ -1,6 +1,7 @@
 # packages/engine/src/apa7_validator/validators/cross_matching.py
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 
 from ..models import Citation, Issue, Reference
@@ -10,16 +11,29 @@ _REF_B = IssueBuilder(target_kind="reference")
 _CIT_B = IssueBuilder(target_kind="citation")
 
 
+_ET_AL_RE = re.compile(r"\s+et\s+al\.?", re.IGNORECASE)
+
+
+def _normalise_family(name: str) -> str:
+    """Normalise a name for cross-matching.
+
+    - Strips "et al." (which appears when the reference list uses lazy
+      "Lastname et al." form instead of listing all authors), with or
+      without a trailing period.
+    - Strips trailing APA-convention punctuation (period, comma).
+    - Lowercases.
+    """
+    return _ET_AL_RE.sub("", name).strip().rstrip(",.").lower()
+
+
 def _ref_key(ref: Reference) -> tuple[str, str]:
-    family = ref.authors[0].family.lower() if ref.authors else ""
-    return (family, ref.year)
+    family = ref.authors[0].family if ref.authors else ""
+    return (_normalise_family(family), ref.year)
 
 
 def _cit_key(cit: Citation) -> tuple[str, str]:
     raw_first = cit.authors[0] if cit.authors else ""
-    # Strip "et al." and trailing punctuation.
-    family = raw_first.replace("et al.", "").strip().rstrip(",")
-    return (family.lower(), cit.year)
+    return (_normalise_family(raw_first), cit.year)
 
 
 def check_cross_matching(cits: list[Citation], refs: list[Reference]) -> list[Issue]:

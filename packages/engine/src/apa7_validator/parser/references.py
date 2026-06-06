@@ -37,6 +37,41 @@ def _looks_like_new_ref(line: str) -> bool:
     return bool(_NEW_REF_RE.match(line))
 
 
+# Fallback extractor: when no specific ref-type parser matches, pull the
+# author-family stub and the year from the raw text so cross-matching can
+# still link the UNKNOWN ref to its citations.
+#
+# Captures everything up to the first "(YYYY)" marker, then post-processes:
+#   - Person-list shape ("Lastname, F.[, more]")  -> keep just the first surname
+#   - Org / "et al." shape                         -> keep the whole pre-paren block
+_FALLBACK_RE = re.compile(
+    r"""
+    ^\s*(?P<authors_raw>[^(]+?)
+    \s*\((?P<year>\d{4}[a-z]?)\)
+    """,
+    re.VERBOSE,
+)
+
+_PERSON_LIST_RE = re.compile(r"^[A-Z][a-zA-Z\-']+,\s+[A-Z]\.")
+_FIRST_SURNAME_RE = re.compile(r"^([A-Z][a-zA-Z\-']+)")
+
+
+def _fallback_author_year(raw: str) -> tuple[str, str] | None:
+    m = _FALLBACK_RE.match(raw)
+    if not m:
+        return None
+    authors_raw = m.group("authors_raw").rstrip(".").strip()
+    year = m.group("year")
+    if _PERSON_LIST_RE.match(authors_raw):
+        # Person list: take just the first surname.
+        first = _FIRST_SURNAME_RE.match(authors_raw)
+        if first:
+            return (first.group(1), year)
+    # Org name or "et al." form: keep the whole pre-paren block;
+    # cross_matching's _normalise_family will strip "et al." for us.
+    return (authors_raw, year)
+
+
 def _prev_continues_author_list(prev: str) -> bool:
     """Author lists wrap with a trailing comma or ampersand on the previous line."""
     stripped = prev.rstrip()
@@ -82,11 +117,13 @@ def parse_references(section: str, body_offset: int) -> list[Reference]:
         start = (local + body_offset) if local >= 0 else (search_from + body_offset)
         parsed = _try_parse_any(entry, start)
         if parsed is None:
+            fallback = _fallback_author_year(entry)
+            family, year = fallback if fallback else ("?", "")
             parsed = Reference(
                 raw=entry,
                 ref_type=ReferenceType.UNKNOWN,
-                authors=[Author(family="?", given_initials="")],
-                year="",
+                authors=[Author(family=family, given_initials="")],
+                year=year,
                 title="",
                 position=Position(start=start, end=start + len(entry)),
             )
