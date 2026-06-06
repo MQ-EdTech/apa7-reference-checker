@@ -3,7 +3,7 @@ const PYODIDE_VERSION = "0.26.4";
 // instead of serving the old wheel from HTTP cache. (GitHub Pages serves wheels
 // with a 10-minute Cache-Control by default, which leaves them cached for hours
 // in client browsers.)
-const WHEEL_CACHE_BUSTER = "2026-06-06-grouped-issues-with-line-numbers";
+const WHEEL_CACHE_BUSTER = "2026-06-06-humanise-bullets-summary";
 const ENGINE_WHEEL = `./dist/apa7_validator-0.1.0-py3-none-any.whl?v=${WHEEL_CACHE_BUSTER}`;
 
 let pyodideReadyPromise = null;

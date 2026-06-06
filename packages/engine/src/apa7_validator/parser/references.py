@@ -33,8 +33,29 @@ _NEW_REF_RE = re.compile(
 )
 
 
+_LIST_MARKER_RE = re.compile(
+    r"""
+    ^[\s\t]*
+    (?:
+        [•‣◦∙●■□]   # bullet glyphs
+      | [\-*+]                                                  # ASCII bullets
+      | \d+[\.\)]                                                # 1. or 1)
+      | \(\d+\)                                                  # (1)
+      | [a-zA-Z][\.\)]                                           # a. or a)
+    )
+    \s+
+    """,
+    re.VERBOSE,
+)
+
+
+def _strip_list_marker(line: str) -> str:
+    return _LIST_MARKER_RE.sub("", line, count=1).strip()
+
+
 def _looks_like_new_ref(line: str) -> bool:
-    return bool(_NEW_REF_RE.match(line))
+    stripped = _strip_list_marker(line)
+    return bool(_NEW_REF_RE.match(stripped))
 
 
 # Fallback extractor: when no specific ref-type parser matches, pull the
@@ -84,9 +105,11 @@ def _split_into_entries(section: str) -> list[str]:
     current: list[str] = []
     for line in lines:
         prev = current[-1] if current else ""
-        if current and _looks_like_new_ref(line) and not _prev_continues_author_list(prev):
-            entries.append(" ".join(current).strip())
-            current = [line]
+        line_starts_ref = _looks_like_new_ref(line)
+        if line_starts_ref and not _prev_continues_author_list(prev):
+            if current:
+                entries.append(" ".join(current).strip())
+            current = [_strip_list_marker(line)]
         else:
             current.append(line)
     if current:
