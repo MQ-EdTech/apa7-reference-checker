@@ -30,6 +30,11 @@ from .validators.formatting.cross_cutting import (
 )
 from .validators.formatting.journal import check_journal
 from .validators.formatting.report import check_report
+from .validators.formatting.styling import (
+    check_book_title_italics,
+    check_hanging_indent,
+    check_journal_italics,
+)
 from .validators.formatting.website import check_website
 
 __all__ = ["Format", "IssueBuilder", "annotate_docx", "validate"]
@@ -76,6 +81,25 @@ def validate(
         formatting_issues += check_website(ref)
         formatting_issues += check_report(ref)
         formatting_issues += check_ai_source(ref)
+
+    if extracted.style_info is not None:
+        formatting_issues += check_hanging_indent(
+            references,
+            extracted.style_info,
+            extracted.position_map,
+        )
+        formatting_issues += check_journal_italics(
+            references,
+            extracted.style_info,
+            extracted.position_map,
+            extracted.text,
+        )
+        formatting_issues += check_book_title_italics(
+            references,
+            extracted.style_info,
+            extracted.position_map,
+            extracted.text,
+        )
 
     cross_issues = check_cross_matching(citations, references)
     existence_issues, degraded = asyncio.run(check_existence(references, clients))

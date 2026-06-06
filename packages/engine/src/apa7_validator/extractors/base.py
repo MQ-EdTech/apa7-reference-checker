@@ -10,6 +10,28 @@ PositionKind = Literal["char_offset", "docx_run", "pdf_char_offset"]
 
 
 @dataclass(frozen=True, slots=True)
+class ParagraphStyle:
+    paragraph_index: int
+    style_id: str  # e.g., "Heading1", "Normal", "References"; "" if unknown
+    indent_hanging_pt: float | None  # hanging indent in points; None if not set
+    indent_left_pt: float | None  # left indent in points
+
+
+@dataclass(frozen=True, slots=True)
+class RunStyle:
+    paragraph_index: int
+    run_index: int
+    italic: bool
+    bold: bool
+
+
+@dataclass(frozen=True, slots=True)
+class StyleInfo:
+    paragraphs: list[ParagraphStyle]
+    runs: list[RunStyle]
+
+
+@dataclass(frozen=True, slots=True)
 class PositionMap:
     """Maps extracted-text offsets back to a source-specific location.
 
@@ -46,6 +68,7 @@ class ExtractionResult:
     position_map: PositionMap
     source_kind: Literal["text", "docx", "pdf"]
     warnings: list[str]
+    style_info: StyleInfo | None = None  # populated only by DocxExtractor
 
 
 class Extractor(Protocol):

@@ -74,6 +74,16 @@ Each rule has a stable machine-readable code. The implementation lives under
 | `url_not_found` | error | URL returned 404 or 410 |
 | `existence_check_unavailable` | info | Lookup service unreachable / rate-limited |
 
+## Styling (DOCX-aware)
+
+These rules require DOCX input — they're skipped for `.pdf` and plain-text.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `hanging_indent_missing` | warning | Reference paragraph lacks the APA 7 hanging indent (~0.5 inch) |
+| `journal_italics_missing` | warning | Journal name should be italicised but isn't |
+| `book_title_italics_missing` | warning | Book or containing-book title should be italicised but isn't |
+
 ## Known gaps — not implemented in this plan (planned for v1.x)
 
 These APA 7 rules are mentioned in the spec but require either DOCX-aware
@@ -84,6 +94,4 @@ engine+CLI plan and slated for a follow-up.
 | Code | Why deferred |
 |------|-------------|
 | `author_ellipsis_missing` | Requires the parser to detect and preserve `...` / `…` between authors and the 21+ author count rule. |
-| `journal_italics_missing` | Italics are stripped by `python-docx` text extraction. Needs a richer DOCX run-level extraction. |
-| `hanging_indent_missing` | Indentation is paragraph-level formatting; needs DOCX paragraph-style inspection rather than text. |
 | `citation_et_al_threshold` | Requires cross-checking citation form against the parsed reference's author count (a citation-reference relational rule). |
