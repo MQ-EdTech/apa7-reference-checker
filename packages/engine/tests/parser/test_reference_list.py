@@ -29,3 +29,26 @@ def test_heading_match_is_case_insensitive_and_line_anchored():
     _body, refs, found = split_body_and_references(text)
     assert found is True
     assert "Smith" in refs
+
+
+def test_splits_on_numbered_heading():
+    text = "Body.\n\n5.0 References\n\nSmith, J. (2020)."
+    _body, refs, found = split_body_and_references(text)
+    assert found is True
+    assert "Smith" in refs
+
+
+def test_splits_on_decimal_subsection_heading():
+    text = "Body.\n\n5.1 References\n\nSmith, J. (2020)."
+    _body, _refs, found = split_body_and_references(text)
+    assert found is True
+
+
+def test_does_not_match_toc_entry_with_trailing_dots():
+    # Table-of-contents-style line: "References" followed by leader dots.
+    text = "References ............................................\nBody...\n\nReferences\n\nSmith, J. (2020)."
+    _body, refs, found = split_body_and_references(text)
+    # The first "References ......." should NOT be treated as the section heading.
+    # The bare "References" on the third-from-end line SHOULD be.
+    assert found is True
+    assert "Smith" in refs

@@ -39,3 +39,56 @@ def test_smith_foundations_book_is_classified_as_book():
     assert len(refs) == 1
     assert refs[0].ref_type is ReferenceType.BOOK
     assert refs[0].publisher == "Earth Press"
+
+
+def test_splits_wrapped_personal_name_reference():
+    section = (
+        "Chen, Y., et al. (2021). The Role of Corporate Social Responsibility and Corporate\n"
+        "Image in Times of Crisis. Journal of Things, 18(16), 8275."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    assert refs[0].authors[0].family == "Chen"
+
+
+def test_splits_wrapped_multi_author_list():
+    # Author list wraps across two lines, ending with ", " on the wrap point.
+    section = (
+        "Elliott, G., Rundle-Thiele, S., Waller, D., Bentrott, I., Hatton-Jones, S., Jeans, P.,\n"
+        "Joshua Anandappa, S., & Campbell, P. (2023). Marketing. John Wiley & Sons.\n\n"
+        "Smith, J. (2020). Foundations. Earth Press."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 2
+    assert refs[0].authors[0].family == "Elliott"
+    assert refs[1].authors[0].family == "Smith"
+
+
+def test_splits_org_name_reference():
+    section = (
+        "Lululemon Athletica. (2025). 2024 Impact Report. Lululemon.\n\n"
+        "Smith, J. (2020). Foundations. Earth Press."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 2
+
+
+def test_splits_et_al_form_org_reference():
+    section = (
+        "Sozuer et al. (2020). The Past, Present, and Future of Marketing Strategy.\n"
+        "A Journal of Research in Marketing. Springer Nature.\n\n"
+        "Smith, J. (2020). Foundations. Earth Press."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 2
+
+
+def test_mixed_personal_and_org_references():
+    section = (
+        "Chen, Y. (2021). Title. Journal of Things.\n"
+        "Lululemon Athletica. (2025). 2024 Impact Report. Lululemon.\n"
+        "ThisRock. (2025). Lululemon Sustainability Report. ThisRock ESG.\n"
+        "Wolfe, I. (2024). How Ethical is Lululemon. Good On You."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 4
