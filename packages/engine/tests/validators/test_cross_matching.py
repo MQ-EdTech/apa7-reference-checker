@@ -59,3 +59,29 @@ def test_ambiguous_match_emits_warning():
     cits = [_cit("Smith", "2020")]
     issues = check_cross_matching(cits, refs)
     assert any(i.code == "ambiguous_match" for i in issues)
+
+
+def test_et_al_in_reference_family_matches_citation():
+    # Some students write lazy reference list entries like "Sozuer et al. (2020)."
+    # The parser stores authors[0].family as "Sozuer et al." — the cross-matcher
+    # must normalise that the same way it normalises citation surface forms.
+    refs = [
+        Reference(
+            raw="Sozuer et al. (2020). Marketing Strategy. Journal.",
+            ref_type=ReferenceType.JOURNAL_ARTICLE,
+            authors=[Author(family="Sozuer et al.", given_initials="")],
+            year="2020",
+            title="Marketing Strategy",
+            position=Position(0, 1),
+        )
+    ]
+    cits = [
+        Citation(
+            raw="(Sozuer et al., 2020)",
+            authors=["Sozuer et al."],
+            year="2020",
+            narrative=False,
+            position=Position(0, 1),
+        )
+    ]
+    assert check_cross_matching(cits, refs) == []

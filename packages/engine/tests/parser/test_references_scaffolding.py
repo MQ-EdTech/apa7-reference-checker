@@ -23,6 +23,60 @@ def test_unparseable_entry_returned_with_unknown_type():
     assert refs[0].ref_type is ReferenceType.UNKNOWN
 
 
+def test_unknown_reference_still_captures_author_and_year_for_cross_matching():
+    # Real student bibliography: missing period after (2023) and trailing
+    # publisher chain breaks the strict journal/book parsers, so this falls
+    # through to UNKNOWN. The fallback extractor must still recover the
+    # leading author surname and the year so the cross-matcher can link
+    # citations like "(Elliott et al., 2023)" to this reference.
+    section = (
+        "Elliott, G., Rundle-Thiele, S., Waller, D., Bentrott, I. (2023) "
+        "Marketing, (6th ed.). John Wiley & Sons, Incorporated. ProQuest."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    assert refs[0].ref_type is ReferenceType.UNKNOWN
+    assert refs[0].authors[0].family == "Elliott"
+    assert refs[0].year == "2023"
+
+
+def test_unknown_reference_with_et_al_form_captures_first_author():
+    # "Sozuer et al. (2020). Title. A Journal of X. Springer Nature." falls
+    # through all parsers (no volume, trailing publisher chain). Fallback
+    # should still extract Sozuer-as-author + 2020.
+    section = (
+        "Sozuer et al. (2020). The Past, Present, and Future of Marketing Strategy. "
+        "A Journal of Research in Marketing. Springer Nature."
+    )
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    # Fallback keeps "Sozuer et al." as the family stub; cross_matching's
+    # _normalise_family strips the "et al." before comparing keys.
+    assert "Sozuer" in refs[0].authors[0].family
+    assert refs[0].year == "2020"
+
+
+def test_unknown_reference_with_multi_word_org_name_keeps_full_name():
+    # "Lululemon Athletica. (2025). 2024 Impact Report. Lululemon." actually
+    # matches the report parser (the word "Report" triggers the hint regex)
+    # but the family is kept with its trailing period — cross_matching's
+    # _normalise_family strips trailing punctuation before comparing.
+    section = "Lululemon Athletica. (2025). 2024 Impact Report. Lululemon."
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    # Family may end with "." per parser convention — strip for the check.
+    assert refs[0].authors[0].family.rstrip(".") == "Lululemon Athletica"
+    assert refs[0].year == "2025"
+
+
+def test_unknown_reference_with_single_word_org_keeps_org():
+    section = "ThisRock. (2025). Lululemon Sustainability Report. ThisRock ESG."
+    refs = parse_references(section, body_offset=0)
+    assert len(refs) == 1
+    assert refs[0].authors[0].family.rstrip(".") == "ThisRock"
+    assert refs[0].year == "2025"
+
+
 def test_duplicate_entries_get_distinct_positions():
     entry = "Smith, J. (2020). A paper. Journal of Things, 5(2), 100-120."
     section = entry + "\n\n" + entry
