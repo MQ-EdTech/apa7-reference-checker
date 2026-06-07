@@ -84,6 +84,29 @@ These rules require DOCX input — they're skipped for `.pdf` and plain-text.
 | `journal_italics_missing` | warning | Journal name should be italicised but isn't |
 | `book_title_italics_missing` | warning | Book or containing-book title should be italicised but isn't |
 
+## Quantity
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `reference_count_below_minimum` | warning | Reference list contains fewer sources than the rubric typically expects (default minimum: 10) |
+
+## Source quality
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `reference_uses_library_proxy_url` | error | URL points to an institutional library proxy gateway (e.g. `ebookcentral.proquest.com/lib/<inst>/...`, EBSCO/Gale proxies, `*.libproxy.*`). Replace with the canonical DOI / ISBN / publisher URL. |
+
+## Phrases from other referencing styles
+
+These cross-cutting checks scan the raw reference text for markers from styles other than APA 7. They fire on any reference type.
+
+| Code | Severity | Description |
+|------|----------|-------------|
+| `deprecated_retrieved_from` | warning | "Retrieved from" is APA 6 style; APA 7 omits the phrase when a URL is present |
+| `deprecated_accessed_date` | warning | "Accessed: \<date>" is Chicago / Harvard convention; APA 7 omits access dates for stable web pages |
+| `deprecated_no_publisher_marker` | warning | "n.p." is from older bibliographic style; APA 7 simply omits the publisher field when unknown |
+| `deprecated_ibid` | warning | "Ibid." is a Chicago / footnote convention; APA 7 uses author-year citations only |
+
 ## Known gaps — not implemented in this plan (planned for v1.x)
 
 These APA 7 rules are mentioned in the spec but require either DOCX-aware
